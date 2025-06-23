@@ -15,7 +15,7 @@ typedef enum {
 } krypton_error_t;
 
 void krypton_set_error(krypton_error_t error);
-krypton_error_t krypton_get_error();
+[[nodiscard("Error getter is discarded!")]] krypton_error_t krypton_get_error();
 void krypton_clear_error();
 
 #ifdef __cplusplus

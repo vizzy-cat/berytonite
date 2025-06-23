@@ -12,7 +12,7 @@ void krypton_set_error(krypton_error_t error) {
 }
 
 // get_error
-krypton_error_t krypton_get_error() {
+[[nodiscard("Error getter is discarded!")]] krypton_error_t krypton_get_error() {
 	return global;
 }
 
