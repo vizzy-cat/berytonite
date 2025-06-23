@@ -11,7 +11,8 @@ typedef enum {
 	KRYPTON_ERR_INVALID_SOURCE,
 	KRYPTON_ERR_INVALID_DEST,
 	KRYPTON_ERR_INVALID_LENGTH,
-	KRYPTON_ERR_RAND_FAILED
+	KRYPTON_ERR_RAND_FAILED,
+	KRYPTON_ERR_EMPTY_SOURCE
 } krypton_error_t;
 
 void krypton_set_error(krypton_error_t error);
