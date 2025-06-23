@@ -17,7 +17,7 @@
 // secure_random
 bool krypton_secure_random(void* buffer, size_t buffer_length) {
 	if (!buffer) {
-		krypton_set_error(KRYPTON_ERR_NULLPTR);
+		krypton_set_error(KRYPTON_ERR_INVALID_DEST);
 		return false;
 	} else if (buffer_length == 0) {
 		krypton_set_error(KRYPTON_ERR_INVALID_LENGTH);
