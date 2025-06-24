@@ -5,7 +5,7 @@ include(CTest)
 # standard (C23)
 set(CMAKE_C_STANDARD 23)
 set(CMAKE_C_STANDARD_REQUIRED ON)
-set(CMAKE_C_EXTENSIONS OFF)
+set(CMAKE_C_EXTENSIONS ON)
 
 # compiler flags
 add_compile_options(-O2 -Wall -Wpedantic -Werror -Wextra)
@@ -23,7 +23,7 @@ file(GLOB_RECURSE KRYPTON_HEADER CONFIGURE_DEPENDS
 add_library(krypton STATIC ${KRYPTON_SRC} ${KRYPTON_HEADER})
 
 target_include_directories(krypton PUBLIC
-	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/krypton>
 	$<INSTALL_INTERFACE:include>
 )
 
@@ -42,6 +42,6 @@ foreach(test_src ${TEST_FILES})
 	get_filename_component(test_name ${test_src} NAME_WE)
 	add_executable(${test_name} ${test_src})
 	target_include_directories(${test_name} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
-	target_link_directories(${test_name} krypton)
+	target_link_libraries(${test_name} PRIVATE krypton)
 	add_test(NAME ${test_name} COMMAND ${test_name})
 endforeach()
