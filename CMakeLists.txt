@@ -26,10 +26,21 @@ target_include_directories(krypton PUBLIC
 	$<INSTALL_INTERFACE:include>
 )
 
+# install
 install(TARGETS krypton DESTINATION lib)
 install(DIRECTORY include/krypton DESTINATION lib)
 
-#enable_testing()
-#add_executable(krypton_test test/krypton_test.c)
-#target_link_libraries(krypton_test krypton)
-#add_test(NAME KryptonTesting COMMAND krypton_test)
+# testing
+enable_testing()
+
+set(TEST_FILES
+	test/base64.c
+)
+
+foreach(test_src ${TEST_FILES})
+	get_filename_component(test_name ${test_src} NAME_WE)
+	add_executable(${test_name} ${test_src})
+	target_include_directories(${test_name} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+	target_link_directories(${test_name} krypton)
+	add_test(NAME ${test_name} COMMAND ${test_name})
+endforeach()
