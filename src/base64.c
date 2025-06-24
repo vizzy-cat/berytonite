@@ -1,34 +1,18 @@
 #include "base64.h"
 #include "error.h"
 #include <stdint.h>
+#include <string.h>
 
 static const char BASE64_TABLE[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-static const uint8_t BASE64_REVERSE_TABLE[256] = {
-	[0 ... 255] = -1,
-	['A'] = 0, ['B'] = 1, ['C'] = 2,
-	['D'] = 3, ['E'] = 4, ['F'] = 5,
-	['G'] = 6, ['H'] = 7, ['I'] = 8,
-	['J'] = 9, ['K'] = 10, ['L'] = 11,
-	['M'] = 12, ['N'] = 13, ['O'] = 14,
-	['P'] = 15, ['Q'] = 16, ['R'] = 17,
-	['S'] = 18, ['T'] = 19, ['U'] = 20,
-	['V'] = 21, ['W'] = 22, ['X'] = 23,
-	['Y'] = 24, ['Z'] = 25, ['a'] = 26,
-	['b'] = 27, ['c'] = 28, ['d'] = 29,
-	['e'] = 30, ['f'] = 31, ['g'] = 32,
-	['h'] = 33, ['i'] = 34, ['j'] = 35,
-	['k'] = 36, ['l'] = 37, ['m'] = 38,
-	['n'] = 39, ['o'] = 40, ['p'] = 41,
-	['q'] = 42, ['r'] = 43, ['s'] = 44,
-	['t'] = 45, ['u'] = 46, ['v'] = 47,
-	['w'] = 48, ['x'] = 49, ['y'] = 50,
-	['z'] = 51, ['0'] = 52, ['1'] = 53,
-	['2'] = 54, ['3'] = 55, ['4'] = 56,
-	['5'] = 57, ['6'] = 58, ['7'] = 59,
-	['8'] = 60, ['9'] = 61, ['+'] = 62,
-	['/'] = 63
-};
+int find(char c) {
+	for (int i = 0; i < 64; i++) {
+		if (BASE64_TABLE[i] == c) {
+			return i;
+		}
+	}
+	return -1;
+}
 
 // base64_encode
 size_t krypton_base64_encode(char* out, const void* data, const size_t data_size) {
@@ -41,19 +25,18 @@ size_t krypton_base64_encode(char* out, const void* data, const size_t data_size
 	} else if (data_size == 0) {
 		krypton_set_error(KRYPTON_ERR_INVALID_LENGTH);
 		return 0;
-	} else if (*data == NULL) {
-		krypton_set_error(KRYPTON_ERR_EMPTY_SOURCE);
-		return 0;
 	}
 
 	const uint8_t* bytes = (const uint8_t*)data;
 	size_t i = 0, j = 0;
 
 	while (i < data_size) {
+		size_t start = i;
 		// take 3 bytes
 		uint8_t a = (i < data_size) ? bytes[i++] : 0;
 		uint8_t b = (i < data_size) ? bytes[i++] : 0;
 		uint8_t c = (i < data_size) ? bytes[i++] : 0;
+		size_t remaining = data_size - start;
 
 		// combine into single 24-bit
 		unsigned _BitInt(24) combined = (unsigned _BitInt(24))((a << 16) | (b << 8) | c);
@@ -67,8 +50,8 @@ size_t krypton_base64_encode(char* out, const void* data, const size_t data_size
 		// translate it into Base64
 		out[j++] = BASE64_TABLE[(size_t)group1];
 		out[j++] = BASE64_TABLE[(size_t)group2];
-		out[j++] = (i - 2 <= data_size) ? BASE64_TABLE[(size_t)group3] : '=';
-		out[j++] = (i - 1 <= data_size) ? BASE64_TABLE[(size_t)group4] : '=';
+		out[j++] = (remaining > 1) ? BASE64_TABLE[(size_t)group3] : '=';
+		out[j++] = (remaining > 2) ? BASE64_TABLE[(size_t)group4] : '=';
 	}
 	
 	out[j] = '\0';
@@ -86,9 +69,6 @@ size_t krypton_base64_decode(void* out, const char* encoded, size_t data_size) {
 		return 0;
 	} else if (data_size == 0) {
 		krypton_set_error(KRYPTON_ERR_INVALID_LENGTH);
-		return 0;
-	} else if (*encoded == NULL) {
-		krypton_set_error(KRYPTON_ERR_EMPTY_SOURCE);
 		return 0;
 	}
 
@@ -109,7 +89,7 @@ size_t krypton_base64_decode(void* out, const char* encoded, size_t data_size) {
 			group++;
 		} else {
 			// take the value from lookup table
-			int8_t val = BASE64_REVERSE_TABLE[(unsigned char)c];
+			int val = find(c);
 
 			if (val < 0) continue;
 			buffer = (buffer << 6) | val;
