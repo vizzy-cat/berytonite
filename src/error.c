@@ -18,5 +18,5 @@ beryton_error_t beryton_get_error() {
 
 // clear_error
 void beryton_clear_error() {
-	global = KRYPTON_OK;
+	global = BERYTON_OK;
 }
