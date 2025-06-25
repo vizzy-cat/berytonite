@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
-#include "krypton/base64.h"
-#include "krypton/error.h"
+#include "beryton/base64.h"
+#include "beryton/error.h"
 
 #define ASSERT_EQ_STR(expected, actual) \
 	{ \
@@ -26,18 +26,18 @@ int main() {
 	char decoded[32];
 
 	// Case 1: Encoding test
-	int out = krypton_base64_encode(encoded, (void*)input1, strlen(input1));
+	int out = beryton_base64_encode(encoded, (void*)input1, strlen(input1));
 	if (out == 0) {
-		printf("Encode 1 failed : %i\n", krypton_get_error());
+		printf("Encode 1 failed : %i\n", beryton_get_error());
 		return 1;
 	}
 
 	ASSERT_EQ_STR("TWFu", encoded);
 
 	// Case 2: Decoding test
-	out = krypton_base64_decode((void*)decoded, encoded, strlen(encoded));
+	out = beryton_base64_decode((void*)decoded, encoded, strlen(encoded));
 	if (out == 0) {
-		printf("Decode 2 failed : %i\n", krypton_get_error());
+		printf("Decode 2 failed : %i\n", beryton_get_error());
 		return 1;
 	}
 
@@ -46,18 +46,18 @@ int main() {
 	// Case 3: Encoder padding test (1 byte)
 	const char* input2 = "M";
 
-	out = krypton_base64_encode(encoded, (void*)input2, strlen(input2));
+	out = beryton_base64_encode(encoded, (void*)input2, strlen(input2));
 	if (out == 0) {
-		printf("Encode 3 failed : %i\n", krypton_get_error());
+		printf("Encode 3 failed : %i\n", beryton_get_error());
 		return 1;
 	}
 
 	ASSERT_EQ_STR("TQ==", encoded);
 
 	// Case 4: Decoder padding test (1 byte)
-	out = krypton_base64_decode(decoded, encoded, strlen(encoded));
+	out = beryton_base64_decode(decoded, encoded, strlen(encoded));
 	if (out == 0) {
-		printf("Decode 4 failed : %i\n", krypton_get_error());
+		printf("Decode 4 failed : %i\n", beryton_get_error());
 		return 1;
 	}
 

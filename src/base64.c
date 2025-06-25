@@ -15,15 +15,15 @@ int find(char c) {
 }
 
 // base64_encode
-size_t krypton_base64_encode(char* out, const void* data, const size_t data_size) {
+size_t beryton_base64_encode(char* out, const void* data, const size_t data_size) {
 	if (!data) {
-		krypton_set_error(KRYPTON_ERR_INVALID_SOURCE);
+		beryton_set_error(BERYTON_ERR_INVALID_SOURCE);
 		return 0;
 	} else if (!out) {
-		krypton_set_error(KRYPTON_ERR_INVALID_DEST);
+		beryton_set_error(BERYTON_ERR_INVALID_DEST);
 		return 0;
 	} else if (data_size == 0) {
-		krypton_set_error(KRYPTON_ERR_INVALID_LENGTH);
+		beryton_set_error(BERYTON_ERR_INVALID_LENGTH);
 		return 0;
 	}
 
@@ -55,20 +55,20 @@ size_t krypton_base64_encode(char* out, const void* data, const size_t data_size
 	}
 	
 	out[j] = '\0';
-	krypton_clear_error();
+	beryton_clear_error();
 	return j;
 }
 
 // base64_decode
-size_t krypton_base64_decode(void* out, const char* encoded, size_t data_size) {
+size_t beryton_base64_decode(void* out, const char* encoded, size_t data_size) {
 	if (!encoded) {
-		krypton_set_error(KRYPTON_ERR_INVALID_SOURCE);
+		beryton_set_error(BERYTON_ERR_INVALID_SOURCE);
 		return 0;
 	} else if (!out) {
-		krypton_set_error(KRYPTON_ERR_INVALID_DEST);
+		beryton_set_error(BERYTON_ERR_INVALID_DEST);
 		return 0;
 	} else if (data_size == 0) {
-		krypton_set_error(KRYPTON_ERR_INVALID_LENGTH);
+		beryton_set_error(BERYTON_ERR_INVALID_LENGTH);
 		return 0;
 	}
 
@@ -109,6 +109,6 @@ size_t krypton_base64_decode(void* out, const char* encoded, size_t data_size) {
 		}
 	}
 
-	krypton_clear_error();
+	beryton_clear_error();
 	return j;
 }

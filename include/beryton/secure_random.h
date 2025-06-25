@@ -1,4 +1,4 @@
-// krypton secure random
+// berytonite secure random
 
 #pragma once
 
@@ -9,7 +9,7 @@
 extern "C" {
 #endif
 
-bool krypton_secure_random(void* buffer, size_t buffer_length);
+bool beryton_secure_random(void* buffer, size_t buffer_length);
 
 #ifdef __cplusplus
 }

@@ -1,4 +1,4 @@
-// krypton base64 coder
+// berytonite base64 coder
 
 #pragma once
 
@@ -8,8 +8,8 @@
 extern "C" {
 #endif
 
-size_t krypton_base64_encode(char* out, const void* data, size_t data_size);
-size_t krypton_base64_decode(void* out, const char* encoded, size_t data_size);
+size_t beryton_base64_encode(char* out, const void* data, size_t data_size);
+size_t beryton_base64_decode(void* out, const char* encoded, size_t data_size);
 
 #ifdef __cplusplus
 }
