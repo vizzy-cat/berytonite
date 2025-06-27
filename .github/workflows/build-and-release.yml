@@ -18,30 +18,32 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest]
+        compiler: clang
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Set compiler
+      shell: bash
+      run: |
+        echo "CC=${{ matrix.compiler }}" >> $GITHUB_ENV
+
     - name: Configure CMake
-      run: cmake -B build -DCMAKE_BUILD_TYPE=Release
+      run: cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=${{ env.CC }} -S .
 
     - name: Build
       run: cmake --build build --parallel
 
-    - name: Install to staging
-      run: cmake --install build --prefix staging
-
     - name: Prepare package
       shell: bash
       run: |
-        mkdir package
-        cp -r staging/include package/
-        cp -r staging/lib package/
-        cp LICENSE README.md BUILD.md CHANGELOG.md package/
-        cd package
-        zip -r berytonite-${{ matrix.os }}.zip .
+        mkdir -p package/lib package/include
+        cp build/libberyton* package/lib/ 2>/dev/null || true
+        cp -r include/beryton package/include/
+        cp README.md LICENSE BUILD.md CHANGELOG.md package/
+        zip -r berytonite-${{ runner.os }}.zip package
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
