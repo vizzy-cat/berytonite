@@ -1,0 +1,75 @@
+name: Build and Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release Tag'
+        required: true
+      prerelease:
+        description: 'Is this a pre-release? (true/false)'
+        required: false
+        default: 'false'
+
+jobs:
+  build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Configure CMake
+      run: cmake -B build -DCMAKE_BUILD_TYPE=Release
+
+    - name: Build
+      run: cmake --build build --parallel
+
+    - name: Install to staging
+      run: cmake --install build --prefix staging
+
+    - name: Prepare package
+      shell: bash
+      run: |
+        mkdir package
+        cp -r staging/include package/
+        cp -r staging/lib package/
+        cp LICENSE README.md BUILD.md CHANGELOG.md package/
+        cd package
+        zip -r berytonite-${{ matrix.os }}.zip .
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: berytonite-${{ matrix.os }}
+        path: berytonite-${{ matrix.os }}.zip
+  
+  release:
+    name: Create Github Release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: artifacts
+
+    - name: Flatten artifacts
+      shell: bash
+      run: |
+        mkdir flat
+        find artifacts -name '*.zip' -exec cp {} flat/ \;
+    
+    - name: Upload to Github Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: ${{ github.event.inputs.tag }}
+        name: ${{ github.event.inputs.tag }}
+        files: flat/*.zip
+        prerelease: ${{ github.event.inputs.prerelease == 'true' }}
+
