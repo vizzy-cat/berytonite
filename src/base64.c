@@ -44,7 +44,7 @@ size_t beryton_base64_encode(char* out, const uint8_t* data, size_t len) {
 }
 
 // base64_decode
-size_t beryton_base64_decode(uint8_t* out, const char* encoded, size_t len) {
+size_t beryton_base64_decode(uint8_t* out, const char* encoded) {
 	size_t i = 0, j = 0;
 	unsigned _BitInt(24) buffer = 0;
 	int pad = 0;
