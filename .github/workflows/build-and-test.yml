@@ -1,4 +1,4 @@
-name: Build and Test (Berytonite)
+name: Build and Test
 
 on:
   workflow_dispatch:
@@ -15,16 +15,28 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Install Clang
+      run: |
+        sudo apt update
+        sudo apt install -y clang
+
     - name: Set build directory
       id: vars
       run: echo "out=build-${{ matrix.build_type }}" >> "$GITHUB_OUTPUT"
 
-    - name: Configure CMake
-      run: cmake -B ${{ steps.vars.outputs.out }} -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DCMAKE_C_STANDARD=23 -S .
+    - name: Configure CMake with Clang
+      run: >
+        cmake -B ${{ steps.vars.outputs.out }}
+        -S .
+        -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+        -DCMAKE_C_STANDARD=23
+        -DCMAKE_C_COMPILER=clang
+        -DCMAKE_CXX_COMPILER=clang++
 
     - name: Build ${{ matrix.build_type }}
       run: cmake --build ${{ steps.vars.outputs.out }} --parallel
 
     - name: Run tests
       working-directory: ${{ steps.vars.outputs.out }}
+      if: matrix.build_type == 'Debug'
       run: ctest --output-on-failure
