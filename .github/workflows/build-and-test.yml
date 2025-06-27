@@ -1,10 +1,7 @@
-name: Build and Test
+name: Build and Test (Berytonite)
 
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+  workflow_dispatch:
 
 jobs:
   build:
@@ -23,11 +20,7 @@ jobs:
       run: echo "out=build-${{ matrix.build_type }}" >> "$GITHUB_OUTPUT"
 
     - name: Configure CMake
-      run: >
-        cmake -B ${{ steps.vars.outputs.out }}
-              -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
-              -DCMAKE_C_STANDARD=23
-              -S .
+      run: cmake -B ${{ steps.vars.outputs.out }} -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DCMAKE_C_STANDARD=23 -S .
 
     - name: Build ${{ matrix.build_type }}
       run: cmake --build ${{ steps.vars.outputs.out }} --parallel
