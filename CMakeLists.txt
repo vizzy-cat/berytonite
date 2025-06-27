@@ -41,6 +41,7 @@ target_include_directories(beryton_shared PUBLIC
 add_library(beryton_static STATIC ${BERYTON_SRC} ${BERYTON_HEADERS})
 set_target_properties(beryton_static PROPERTIES OUTPUT_NAME beryton)
 target_include_directories(beryton_static PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/beryton>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
