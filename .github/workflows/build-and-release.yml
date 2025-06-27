@@ -19,7 +19,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
-        compiler: clang
+        compiler: [clang]
 
     steps:
     - name: Checkout code
