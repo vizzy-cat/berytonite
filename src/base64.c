@@ -1,5 +1,4 @@
 #include "base64.h"
-#include "error.h"
 
 static const char BASE64_TABLE[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
@@ -13,27 +12,16 @@ int find(char c) {
 }
 
 // base64_encode
-size_t beryton_base64_encode(char* out, const uint8_t* data, size_t length) {
-	if (!data) {
-		beryton_set_error(BERYTON_ERR_INVALID_SOURCE);
-		return 0;
-	} else if (!out) {
-		beryton_set_error(BERYTON_ERR_INVALID_DEST);
-		return 0;
-	} else if (length == 0) {
-		beryton_set_error(BERYTON_ERR_INVALID_LENGTH);
-		return 0;
-	}
-
+size_t beryton_base64_encode(char* out, const uint8_t* data, size_t len) {
 	size_t i = 0, j = 0;
 
-	while (i < length) {
+	while (i < len) {
 		size_t start = i;
 		// take 3 bytes
-		uint8_t a = (i < length) ? data[i++] : 0;
-		uint8_t b = (i < length) ? data[i++] : 0;
-		uint8_t c = (i < length) ? data[i++] : 0;
-		int remaining = length - start;
+		uint8_t a = (i < len) ? data[i++] : 0;
+		uint8_t b = (i < len) ? data[i++] : 0;
+		uint8_t c = (i < len) ? data[i++] : 0;
+		int remaining = len - start;
 
 		// combine into single 24-bit
 		unsigned _BitInt(24) combined = (unsigned _BitInt(24))((a << 16) | (b << 8) | c);
@@ -52,23 +40,11 @@ size_t beryton_base64_encode(char* out, const uint8_t* data, size_t length) {
 	}
 	
 	out[j] = '\0';
-	beryton_clear_error();
 	return j;
 }
 
 // base64_decode
-size_t beryton_base64_decode(uint8_t* out, const char* encoded, size_t length) {
-	if (!encoded) {
-		beryton_set_error(BERYTON_ERR_INVALID_SOURCE);
-		return 0;
-	} else if (!out) {
-		beryton_set_error(BERYTON_ERR_INVALID_DEST);
-		return 0;
-	} else if (length == 0) {
-		beryton_set_error(BERYTON_ERR_INVALID_LENGTH);
-		return 0;
-	}
-
+size_t beryton_base64_decode(uint8_t* out, const char* encoded, size_t len) {
 	size_t i = 0, j = 0;
 	unsigned _BitInt(24) buffer = 0;
 	int pad = 0;
@@ -104,6 +80,5 @@ size_t beryton_base64_decode(uint8_t* out, const char* encoded, size_t length) {
 		}
 	}
 
-	beryton_clear_error();
 	return j;
 }
