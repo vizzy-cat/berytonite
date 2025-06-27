@@ -1,0 +1,37 @@
+name: Build and Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        build_type: [Debug, Release]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set build directory
+      id: vars
+      run: echo "out=build-${{ matrix.build_type }}" >> "$GITHUB_OUTPUT"
+
+    - name: Configure CMake
+      run: >
+        cmake -B ${{ steps.vars.outputs.out }}
+              -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+              -DCMAKE_C_STANDARD=23
+              -S .
+
+    - name: Build ${{ matrix.build_type }}
+      run: cmake --build ${{ steps.vars.outputs.out }} --parallel
+
+    - name: Run tests
+      working-directory: ${{ steps.vars.outputs.out }}
+      run: ctest --output-on-failure
