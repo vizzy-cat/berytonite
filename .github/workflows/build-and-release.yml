@@ -45,33 +45,11 @@ jobs:
         cp README.md LICENSE BUILD.md CHANGELOG.md package/
         zip -r berytonite-${{ runner.os }}.zip package
 
-    - name: Upload artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: berytonite-${{ matrix.os }}
-        path: berytonite-${{ matrix.os }}.zip
-  
-  release:
-    name: Create Github Release
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-    - name: Download all artifacts
-      uses: actions/download-artifact@v4
-      with:
-        path: artifacts
-
-    - name: Flatten artifacts
-      shell: bash
-      run: |
-        mkdir flat
-        find artifacts -name '*.zip' -exec cp {} flat/ \;
-    
-    - name: Upload to Github Release
+    - name: Upload Release
       uses: softprops/action-gh-release@v2
       with:
         tag_name: ${{ github.event.inputs.tag }}
         name: ${{ github.event.inputs.tag }}
-        files: flat/*.zip
-        prerelease: ${{ github.event.inputs.prerelease == 'true' }}
-
+        files: berytonite-${{ runner.os }}.zip
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
