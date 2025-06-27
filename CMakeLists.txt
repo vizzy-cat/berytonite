@@ -6,12 +6,12 @@ set(CMAKE_C_STANDARD 23)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
 
-# Use Release by default
+# Default to Release
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
 endif()
 
-# Compiler flags by build type
+# Compiler flags
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     message(STATUS "Build mode: DEBUG + TESTING")
     add_compile_definitions(DEBUG TESTING)
@@ -22,44 +22,52 @@ else()
     add_compile_options(-O2)
 endif()
 
-# Common warning flags
+# Warnings & features
 add_compile_options(-Wall -Wextra -Wpedantic -Werror -std=c2x)
 
-# Source and header files
+# Source files
 file(GLOB_RECURSE BERYTON_SRC CONFIGURE_DEPENDS src/*.c)
 file(GLOB_RECURSE BERYTON_HEADERS CONFIGURE_DEPENDS include/beryton/*.h)
 
-# Library target
-add_library(beryton STATIC ${BERYTON_SRC} ${BERYTON_HEADERS})
-
-# Public include path
-target_include_directories(beryton PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/beryton>
+# Shared Library
+add_library(beryton_shared SHARED ${BERYTON_SRC} ${BERYTON_HEADERS})
+set_target_properties(beryton_shared PROPERTIES OUTPUT_NAME beryton)
+target_include_directories(beryton_shared PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include/beryton>
+    $<INSTALL_INTERFACE:include>
 )
 
-# Install rules
-install(TARGETS beryton DESTINATION lib)
+# Static Library
+add_library(beryton_static STATIC ${BERYTON_SRC} ${BERYTON_HEADERS})
+set_target_properties(beryton_static PROPERTIES OUTPUT_NAME beryton)
+target_include_directories(beryton_static PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+
+# Install rule
+install(TARGETS beryton_static beryton_shared
+    ARCHIVE DESTINATION lib
+    LIBRARY DESTINATION lib
+    RUNTIME DESTINATION bin
+)
 install(DIRECTORY include/beryton DESTINATION include)
 
 # Testing
 include(CTest)
 enable_testing()
 
-# List of test files
 set(TEST_FILES
     test/base64.c
     test/sha256.c
 )
 
-# Setup test executables
 foreach(test_src ${TEST_FILES})
     get_filename_component(test_name ${test_src} NAME_WE)
     add_executable(${test_name} ${test_src})
 
     target_include_directories(${test_name} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
-    target_link_libraries(${test_name} PRIVATE beryton)
+    target_link_libraries(${test_name} PRIVATE beryton_static) # Test against static lib
 
     add_test(NAME ${test_name} COMMAND ${test_name})
 endforeach()
