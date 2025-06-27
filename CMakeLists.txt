@@ -38,6 +38,11 @@ target_include_directories(beryton_shared PUBLIC
     $<INSTALL_INTERFACE:include>
 )
 
+# macOS specific
+if(APPLE)
+	target_link_libraries(beryton_shared PUBLIC "-framework Security")
+endif()
+
 # Static Library
 add_library(beryton_static STATIC ${BERYTON_SRC} ${BERYTON_HEADERS})
 set_target_properties(beryton_static PROPERTIES OUTPUT_NAME beryton)
