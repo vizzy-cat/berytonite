@@ -22,7 +22,7 @@ int main() {
 	// Base64 Encoding & Decoding Tester
 	const char* input1 = "Man";
 	char encoded[32];
-	char decoded[32];
+	uint8_t decoded[32];
 
 	// Case 1: Encoding test
 	beryton_base64_encode(encoded, (void*)input1, strlen(input1));
@@ -30,7 +30,7 @@ int main() {
 	ASSERT_EQ_STR("TWFu", encoded);
 
 	// Case 2: Decoding test
-	beryton_base64_decode((void*)decoded, encoded, strlen(encoded));
+	beryton_base64_decode(decoded, encoded);
 
 	ASSERT_EQ_MEM("Man", decoded, 3);
 
@@ -42,7 +42,7 @@ int main() {
 	ASSERT_EQ_STR("TQ==", encoded);
 
 	// Case 4: Decoder padding test (1 byte)
-	beryton_base64_decode(decoded, encoded, strlen(encoded));
+	beryton_base64_decode(decoded, encoded);
 
 	ASSERT_EQ_MEM("M", decoded, 1);
 
