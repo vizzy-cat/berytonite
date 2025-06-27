@@ -23,7 +23,7 @@ else()
 endif()
 
 # Common warning flags
-add_compile_options(-Wall -Wextra -Wpedantic -Werror)
+add_compile_options(-Wall -Wextra -Wpedantic -Werror -std=c2x)
 
 # Source and header files
 file(GLOB_RECURSE BERYTON_SRC CONFIGURE_DEPENDS src/*.c)
