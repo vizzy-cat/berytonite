@@ -35,6 +35,7 @@ add_library(beryton STATIC ${BERYTON_SRC} ${BERYTON_HEADERS})
 # Public include path
 target_include_directories(beryton PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/beryton>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include/beryton>
 )
 
