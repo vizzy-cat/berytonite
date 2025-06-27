@@ -33,6 +33,7 @@ file(GLOB_RECURSE BERYTON_HEADERS CONFIGURE_DEPENDS include/beryton/*.h)
 add_library(beryton_shared SHARED ${BERYTON_SRC} ${BERYTON_HEADERS})
 set_target_properties(beryton_shared PROPERTIES OUTPUT_NAME beryton)
 target_include_directories(beryton_shared PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/beryton>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
