@@ -10,13 +10,17 @@ To build from source, see [BUILD.md](BUILD.md)
 
 ## Development Status
 
-> Berytonite is a passion project developed during spare time.
+Berytonite is a passion project developed during spare time.
 While updates may not be daily, every commit is handcrafted with care.
 The roadmap is long-term: building a reliable and modern cryptographic base for C.
 
 ## License
 
 This project is licensed under the Zlib License. See the [LICENSE](LICENSE) for details.
+
+## Attribution
+
+If you use this library in a commercial or large-scale project, please provide proper credit to me (Vizzy the TV Cat). It's not legally required, but it's ethically appreciated.
 
 ## Contributing
 
