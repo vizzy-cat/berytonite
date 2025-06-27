@@ -2,14 +2,15 @@
 
 #pragma once
 
+#include <stdint.h>
 #include <stddef.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-size_t beryton_base64_encode(char* out, const void* data, size_t data_size);
-size_t beryton_base64_decode(void* out, const char* encoded, size_t data_size);
+size_t beryton_base64_encode(char* out, const uint8_t* data, size_t length);
+size_t beryton_base64_decode(uint8_t* out, const char* encoded, size_t length);
 
 #ifdef __cplusplus
 }
