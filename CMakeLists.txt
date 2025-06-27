@@ -1,12 +1,12 @@
 cmake_minimum_required(VERSION 3.16)
 project(berytonite LANGUAGES C)
 
-# C standard: C23 without extension
+# C standard: C23 without extensions
 set(CMAKE_C_STANDARD 23)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
 
-# Use Release if not set
+# Use Release by default
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
 endif()
@@ -22,7 +22,7 @@ else()
     add_compile_options(-O2)
 endif()
 
-# Warning flags
+# Common warning flags
 add_compile_options(-Wall -Wextra -Wpedantic -Werror)
 
 # Source and header files
@@ -32,9 +32,10 @@ file(GLOB_RECURSE BERYTON_HEADERS CONFIGURE_DEPENDS include/beryton/*.h)
 # Library target
 add_library(beryton STATIC ${BERYTON_SRC} ${BERYTON_HEADERS})
 
+# Public include path
 target_include_directories(beryton PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/beryton>
+    $<INSTALL_INTERFACE:include/beryton>
 )
 
 # Install rules
