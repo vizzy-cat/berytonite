@@ -51,5 +51,6 @@ jobs:
         tag_name: ${{ github.event.inputs.tag }}
         name: ${{ github.event.inputs.tag }}
         files: berytonite-${{ runner.os }}.zip
+        prerelease: ${{ github.event.inputs.prerelease == 'true' }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
