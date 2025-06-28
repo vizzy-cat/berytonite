@@ -14,7 +14,7 @@ void beryton_bytetohex(char* out, const uint8_t* in, size_t len) {
 	out[len * 2] = '\0';
 }
 
-ZERO_OPTIMIZE_ATT void beryton_memzero(void* ptr, size_t len) {
+void beryton_memzero(void* ptr, size_t len) {
 #if defined(__GNUC__)||defined(__clang__)
 	volatile unsigned char* p = (volatile unsigned char*)ptr;
 	while (len--) *p++ = 0;
