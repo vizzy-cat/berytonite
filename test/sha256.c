@@ -33,7 +33,7 @@ static const test_vector_t tests[] = {
     }
 };
 
-int main() {
+int main(void) {
     uint8_t hash[BERYTON_SHA256_DIGEST_SIZE];
     char hex[BERYTON_SHA256_DIGEST_SIZE * 2 + 1];
     int fail = 0;

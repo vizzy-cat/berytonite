@@ -18,7 +18,7 @@
 		} \
 	} \
 
-int main() {
+int main(void) {
 	// Base64 Encoding & Decoding Tester
 	const char* input1 = "Man";
 	char encoded[32];
