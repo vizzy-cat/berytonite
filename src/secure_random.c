@@ -8,10 +8,6 @@
 #elif defined(_WIN32)
 	#include <windows.h>
 	#include <bcrypt.h>
-
-	#ifdef _MSC_VER
-		#pragma comment(lib, "bcrypt.lib")
-	#endif
 #elif defined(__APPLE__)
 	#include <Security/Security.h>
 #else
