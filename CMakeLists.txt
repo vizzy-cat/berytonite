@@ -49,11 +49,6 @@ target_include_directories(beryton_shared PUBLIC
     $<INSTALL_INTERFACE:include>
 )
 
-# macOS specific
-if(APPLE)
-	target_link_libraries(beryton_shared PUBLIC "-framework Security")
-endif()
-
 # Static Library
 add_library(beryton_static STATIC ${BERYTON_SRC} ${BERYTON_HEADERS})
 set_target_properties(beryton_static PROPERTIES OUTPUT_NAME beryton)
@@ -62,6 +57,17 @@ target_include_directories(beryton_static PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
+
+# macOS specific
+if(APPLE)
+	target_link_libraries(beryton_shared PUBLIC "-framework Security")
+endif()
+
+# Windows specific
+if(WIN32)
+	target_link_libraries(beryton_static PUBLIC bcrypt)
+	target_link_libraries(beryton_shared PUBLIC bcrypt)
+endif()
 
 # Install rule
 install(TARGETS beryton_static beryton_shared
