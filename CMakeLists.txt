@@ -12,18 +12,29 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 # Compiler flags
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    message(STATUS "Build mode: DEBUG + TESTING")
-    add_compile_definitions(DEBUG TESTING)
-    add_compile_options(-g)
+if(MSVC)
+	if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+		message(STATUS "Build mode: DEBUG")
+	else()
+		message(STATUS "Build mode: Release")
+
+		foreach(flag_var
+			CMAKE_C_FLAGS_RELEASE)
+			string(REPLACE "/RTC1" "" ${flag_var} "${${flag_var}}")
+		endforeach()
+	endif()
 else()
-    message(STATUS "Build mode: RELEASE")
-    add_compile_definitions(NDEBUG)
-    add_compile_options(-O2)
+	if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    		message(STATUS "Build mode: DEBUG")
+    		add_compile_options(-O0 -g)
+	else()
+		message(STATUS "Build mode: RELEASE")
+		add_compile_options(-O2)
+	endif()
 endif()
 
-# Warnings & features
-add_compile_options(-Wall -Wextra -Wpedantic -Werror -std=c2x)
+# Warnings
+add_compile_options(-Wall -Wextra -Wpedantic -Werror)
 
 # Source files
 file(GLOB_RECURSE BERYTON_SRC CONFIGURE_DEPENDS src/*.c)
