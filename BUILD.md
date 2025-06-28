@@ -2,7 +2,7 @@
 
 - CMake ≥ 3.16
 
-- C Compiler with C23 support (e.g., GCC ≥ 13, Clang ≥ 16)
+- C Compiler with C17 support (e.g., GCC ≥ 9, Clang ≥ 10)
 
 - Make as build system
 
