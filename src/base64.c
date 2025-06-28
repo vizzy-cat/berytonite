@@ -24,13 +24,13 @@ size_t beryton_base64_encode(char* out, const uint8_t* data, size_t len) {
 		int remaining = len - start;
 
 		// combine into single 24-bit
-		unsigned _BitInt(24) combined = (unsigned _BitInt(24))((a << 16) | (b << 8) | c);
+		uint32_t combined = (uint32_t)((a << 16) | (b << 8) | c);
 
 		// split into 4 group of 6-bit
-		unsigned _BitInt(6) group1 = (unsigned _BitInt(6))((combined >> 18) & 0x3F);
-		unsigned _BitInt(6) group2 = (unsigned _BitInt(6))((combined >> 12) & 0x3F);
-		unsigned _BitInt(6) group3 = (unsigned _BitInt(6))((combined >> 6) & 0x3F);
-		unsigned _BitInt(6) group4 = (unsigned _BitInt(6))(combined & 0x3F);
+		uint8_t group1 = (unsigned _BitInt(6))((combined >> 18) & 0x3F);
+		uint8_t group2 = (unsigned _BitInt(6))((combined >> 12) & 0x3F);
+		uint8_t group3 = (unsigned _BitInt(6))((combined >> 6) & 0x3F);
+		uint8_t group4 = (unsigned _BitInt(6))(combined & 0x3F);
 		
 		// translate it into Base64
 		out[j++] = BASE64_TABLE[group1];
@@ -46,7 +46,7 @@ size_t beryton_base64_encode(char* out, const uint8_t* data, size_t len) {
 // base64_decode
 size_t beryton_base64_decode(uint8_t* out, const char* encoded) {
 	size_t i = 0, j = 0;
-	unsigned _BitInt(24) buffer = 0;
+	uint32_t buffer = 0;
 	int pad = 0;
 	int group = 0;
 
