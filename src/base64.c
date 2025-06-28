@@ -28,10 +28,10 @@ size_t beryton_base64_encode(char* out, const uint8_t* data, size_t len) {
 		uint32_t combined = (uint32_t)((a << 16) | (b << 8) | c);
 
 		// split into 4 group of 6-bit
-		uint8_t group1 = (unsigned _BitInt(6))((combined >> 18) & 0x3F);
-		uint8_t group2 = (unsigned _BitInt(6))((combined >> 12) & 0x3F);
-		uint8_t group3 = (unsigned _BitInt(6))((combined >> 6) & 0x3F);
-		uint8_t group4 = (unsigned _BitInt(6))(combined & 0x3F);
+		uint8_t group1 = (uint8_t)((combined >> 18) & 0x3F);
+		uint8_t group2 = (uint8_t)((combined >> 12) & 0x3F);
+		uint8_t group3 = (uint8_t)((combined >> 6) & 0x3F);
+		uint8_t group4 = (uint8_t)(combined & 0x3F);
 		
 		// translate it into Base64
 		out[j++] = BASE64_TABLE[group1];
