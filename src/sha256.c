@@ -1,6 +1,7 @@
 #include "sha256.h"
 #include "internal/attribute.h"
 #include "internal/compiler.h"
+#include <string.h>
 
 static const uint32_t k[64] = {
 	0x428a2f98, 0x71374491,
