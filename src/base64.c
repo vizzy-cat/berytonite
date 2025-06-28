@@ -2,7 +2,7 @@
 
 static const char BASE64_TABLE[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-int find(char c) {
+static inline int find(char c) {
 	for (int i = 0; i < 64; i++) {
 		if (BASE64_TABLE[i] == c) {
 			return i;
