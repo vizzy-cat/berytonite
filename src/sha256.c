@@ -1,5 +1,6 @@
 #include "sha256.h"
-#include <string.h>
+#include "internal/attribute.h"
+#include "internal/compiler.h"
 
 static const uint32_t k[64] = {
 	0x428a2f98, 0x71374491,
@@ -36,17 +37,17 @@ static const uint32_t k[64] = {
 	0xbef9a3f7, 0xc67178f2
 };
 
-#define ROTR(x, n) ((x >> n) | (x << (32 - n)))
-#define SHR(x, n) (x >> n)
-#define CH(x, y, z) ((x & y) ^ (~x & z))
-#define MAJ(x, y, z) ((x & y) ^ (x & z) ^ (y & z))
-#define SIG0(x) (ROTR(x, 2) ^ ROTR(x, 13) ^ ROTR(x, 22))
-#define SIG1(x) (ROTR(x, 6) ^ ROTR(x, 11) ^ ROTR(x, 25))
-#define S0(x) (ROTR(x, 7) ^ ROTR(x, 18) ^ SHR(x, 3))
-#define S1(x) (ROTR(x, 17) ^ ROTR(x, 19) ^ SHR(x, 10))
+static inline INLINE_ATT uint32_t ROTR(uint32_t x, uint32_t n) { return ((x >> n) | (x << (32 - n))); }
+static inline INLINE_ATT uint32_t SHR(uint32_t x, uint32_t n) { return (x >> n); }
+static inline INLINE_ATT uint32_t CH(uint32_t x, uint32_t y, uint32_t z) { return ((x & y) ^ (~x & z)); }
+static inline INLINE_ATT uint32_t MAJ(uint32_t x, uint32_t y, uint32_t z) { return ((x & y) ^ (x & z) ^ (y & z)); }
+static inline INLINE_ATT uint32_t SIG0(uint32_t x) { return (ROTR(x, 2) ^ ROTR(x, 13) ^ ROTR(x, 22)); }
+static inline INLINE_ATT uint32_t SIG1(uint32_t x) { return (ROTR(x, 6) ^ ROTR(x, 11) ^ ROTR(x, 25)); }
+static inline INLINE_ATT uint32_t S0(uint32_t x) { return (ROTR(x, 7) ^ ROTR(x, 18) ^ SHR(x, 3)); }
+static inline INLINE_ATT uint32_t S1(uint32_t x) { return (ROTR(x, 17) ^ ROTR(x, 19) ^ SHR(x, 10)); }
 
 // sha256_transform
-static void sha256_transform(beryton_sha256_ctx* ctx, const uint8_t* data) {
+static void sha256_transform(beryton_sha256_ctx* restrict ctx, const uint8_t* restrict data) {
 	uint32_t w[64];
 	uint32_t a, b, c, d, e, f, g, h;
 
@@ -65,6 +66,7 @@ static void sha256_transform(beryton_sha256_ctx* ctx, const uint8_t* data) {
 	g = ctx->h[6];
 	h = ctx->h[7];
 
+	UNROLL(4)
 	for (int i = 0; i < 64; i++) {
 		uint32_t t1 = h + SIG1(e) + CH(e, f, g) + k[i] + w[i];
 		uint32_t t2 = SIG0(a) + MAJ(a, b, c);
@@ -89,7 +91,7 @@ static void sha256_transform(beryton_sha256_ctx* ctx, const uint8_t* data) {
 }
 
 // sha256_init
-void beryton_sha256_init(beryton_sha256_ctx* ctx) {
+inline void beryton_sha256_init(beryton_sha256_ctx* ctx) {
 	ctx->h[0] = 0x6a09e667;
 	ctx->h[1] = 0xbb67ae85;
 	ctx->h[2] = 0x3c6ef372;
@@ -152,7 +154,7 @@ void beryton_sha256_final(beryton_sha256_ctx* ctx, uint8_t* digest) {
 }
 
 // sha256_digest
-void beryton_sha256_digest(uint8_t* digest, const uint8_t* data, size_t len) {
+inline void beryton_sha256_digest(uint8_t* digest, const uint8_t* data, size_t len) {
 	beryton_sha256_ctx ctx;
 	beryton_sha256_init(&ctx);
 	beryton_sha256_update(&ctx, data, len);
