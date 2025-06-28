@@ -1,8 +1,9 @@
 #include "base64.h"
+#include "internal/attribute.h"
 
 static const char BASE64_TABLE[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-static inline int find(char c) {
+static inline PURE_ATT int find(char c) {
 	for (int i = 0; i < 64; i++) {
 		if (BASE64_TABLE[i] == c) {
 			return i;
