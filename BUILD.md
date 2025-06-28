@@ -2,11 +2,11 @@
 
 - CMake ≥ 3.16
 
-- C Compiler with C17 support (e.g., GCC ≥ 9, Clang ≥ 10)
+- C Compiler with C17 support (don't use MSVC, it's still buggy)
 
-- Make as build system
+- Make / Ninja
 
-- CTest for running tests (optional)
+- CTest (optional)
 
 ## Building the Library
 
@@ -33,7 +33,7 @@ This will build:
 
 - `libberyton.a` (static library)
 
-- `libberyton.so` or `libberyton.dll` (shared/dynamic library)
+- `libberyton.so` / `libberyton.dll` / `libberyton.dylib` (shared/dynamic library)
 
 - Test binaries
 
@@ -46,7 +46,7 @@ ctest --output-on-failure
 
 ---
 
-## Install (Optional)
+## Install
 ```
 cmake --install build --prefix /your/install/path
 ```
