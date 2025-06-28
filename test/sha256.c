@@ -46,9 +46,9 @@ int main(void) {
         beryton_bytetohex(hex, hash, BERYTON_SHA256_DIGEST_SIZE);
 
         if (strcmp(hex, expected) == 0) {
-            printf("[PASS] Test %llu: input \"%s\"\n", i, input);
+            printf("[PASS] Test %lu: input \"%s\"\n", i, input);
         } else {
-            printf("[FAIL] Test %llu: input \"%s\"\n", i, input);
+            printf("[FAIL] Test %lu: input \"%s\"\n", i, input);
             printf("       Got:      %s\n", hex);
             printf("       Expected: %s\n", expected);
             fail++;
