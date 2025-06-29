@@ -41,7 +41,12 @@ jobs:
         cp build/libberyton* package/lib/ 2>/dev/null || true
         cp -r include/beryton package/include/
         cp README.md LICENSE BUILD.md CHANGELOG.md package/
-        zip -r berytonite-${{ runner.os }}.zip package
+
+        if [[ "$RUNNER_OS" == "Windows" ]];then
+          powershell.exe -Command "Compress-Archive -Path package/* -DestinationPath berytonite-${{ runner.os }}.zip"
+        else
+          zip -r berytonite-${{ runner.os }}.zip package
+        fi
 
 #    - name: Upload Release
 #      uses: softprops/action-gh-release@v2
