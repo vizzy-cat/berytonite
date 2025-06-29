@@ -18,20 +18,18 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
-        compiler: [clang]
+        os: [ubuntu-latest, windows-latest, macos-latest]
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Set compiler
-      shell: bash
-      run: |
-        echo "CC=${{ matrix.compiler }}" >> $GITHUB_ENV
-
     - name: Configure CMake
-      run: cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=${{ env.CC }} -S .
+      shell: bash
+      run: >
+        cmake -B build -S .
+        -G Ninja
+        -DCMAKE_BUILD_TYPE=Release
 
     - name: Build
       run: cmake --build build --parallel
@@ -45,12 +43,12 @@ jobs:
         cp README.md LICENSE BUILD.md CHANGELOG.md package/
         zip -r berytonite-${{ runner.os }}.zip package
 
-    - name: Upload Release
-      uses: softprops/action-gh-release@v2
-      with:
-        tag_name: ${{ github.event.inputs.tag }}
-        name: ${{ github.event.inputs.tag }}
-        files: berytonite-${{ runner.os }}.zip
-        prerelease: ${{ github.event.inputs.prerelease == 'true' }}
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#    - name: Upload Release
+#      uses: softprops/action-gh-release@v2
+#      with:
+#        tag_name: ${{ github.event.inputs.tag }}
+#        name: ${{ github.event.inputs.tag }}
+#        files: berytonite-${{ runner.os }}.zip
+#        prerelease: ${{ github.event.inputs.prerelease == 'true' }}
+#      env:
+#        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
