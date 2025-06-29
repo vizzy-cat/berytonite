@@ -101,7 +101,6 @@ inline void beryton_sha256_init(beryton_sha256_ctx* ctx) {
 	ctx->h[5] = 0x9b05688c;
 	ctx->h[6] = 0x1f83d9ab;
 	ctx->h[7] = 0x5be0cd19;
-	memset(ctx->buffer, 0, 64);
 	ctx->buffer_len = 0;
 	ctx->total_len = 0;
 }
