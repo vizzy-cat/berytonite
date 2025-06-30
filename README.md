@@ -17,7 +17,7 @@ While updates may not drop every day, the long-term vision is clear:
 
 ## License
 
-This project is licensed under the Zlib License. See the [LICENSE](LICENSE) for details.
+This project is licensed under the Berytonite License 1.0. See the [LICENSE](LICENSE) for details.
 
 ## Contributing
 
