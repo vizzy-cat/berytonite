@@ -1,4 +1,4 @@
-#include "secure_random.h"
+#include "util.h"
 
 #if defined(__linux__)
 	#include <sys/random.h>
@@ -15,44 +15,44 @@
 #endif
 
 // secure_random
-bool beryton_secure_random(void* buffer, size_t buffer_length) {
+size_t bt_secure_rand(void* buffer, size_t len) {
 #if defined(__linux__)
 	// Linux
 #if defined(__ANDROID__)
 	// Android fallback
 	int fd = open("/dev/urandom", O_RDONLY);
 	if (fd < 0) {
-		return false;
+		return 0;
 	}
 
 	ssize_t total = 0;
-	while (total < (ssize_t)buffer_length) {
-		ssize_t r = read(fd, (char*)buffer + total, buffer_length - total);
+	while (total < (ssize_t)len) {
+		ssize_t r = read(fd, (char*)(buffer + total), len - total);
 		if (r <= 0) {
 			close(fd);
-			return false;
+			return 0;
 		}
 		total += r;
 	}
 
 	close(fd);
 #else
-	int out = getrandom(buffer, buffer_length, 0);
+	int out = getrandom(buffer, len, 0);
 
-	if (out != (ssize_t)buffer_length) {
-		return false;
+	if (out != (ssize_t)len) {
+		return 0;
 	}
 #endif // Android
 #elif defined(_WIN32)
 	// Windows
-	if (BCryptGenRandom(NULL, buffer, (ULONG)buffer_length, BCRYPT_USE_SYSTEM_PREFERRED_RNG) != 0) {
-		return false;
+	if (BCryptGenRandom(NULL, buffer, (ULONG)len, BCRYPT_USE_SYSTEM_PREFERRED_RNG) != 0) {
+		return 0;
 	}
 #elif defined(__APPLE__)
 	// Apple Ecosystem
-	if (SecRandomCopyBytes(kSecRandomDefault, buffer_length, buffer) != errSecSuccess) {
-		return false;
+	if (SecRandomCopyBytes(kSecRandomDefault, len, buffer) != errSecSuccess) {
+		return 0;
 	}
 #endif
-	return true;
+	return len;
 }
