@@ -3,35 +3,35 @@
 
 static const char BASE64_TABLE[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-static inline PURE_ATT int find(char c) {
-	for (int i = 0; i < 64; i++) {
-		if (BASE64_TABLE[i] == c) {
-			return i;
-		}
-	}
-	return -1;
+static inline PURE_ATT int b64to6bit(char c) {
+	if ((uint8_t)(c - 'A') < 26) return c - 'A'; // 'A' <= c <= 'Z'
+	if ((uint8_t)(c - 'a') < 26) return c - 'a' + 26; // 'a' <= c <= 'z'
+	if ((uint8_t)(c - '0') < 10) return c - '0' + 52; // '0' <= c <= '9'
+	if (c == '+') return 62;
+	if (c == '/') return 63;
+	return -1
 }
 
 // base64_encode
-size_t beryton_base64_encode(char* out, const uint8_t* data, size_t len) {
+void bt_base64_encode(char* out, const uint8_t* in, size_t len) {
 	size_t i = 0, j = 0;
 
 	while (i < len) {
 		size_t start = i;
 		// take 3 bytes
-		uint8_t a = (i < len) ? data[i++] : 0;
-		uint8_t b = (i < len) ? data[i++] : 0;
-		uint8_t c = (i < len) ? data[i++] : 0;
-		int remaining = len - start;
+		uint_fast8_t a = in[i++];
+		uint_fast8_t b = (i < len) ? in[i++] : 0;
+		uint_fast8_t c = (i < len) ? in[i++] : 0;
+		int_fast8_t remaining = len - start;
 
 		// combine into single 24-bit
-		uint32_t combined = (uint32_t)((a << 16) | (b << 8) | c);
+		uint_fast32_t combined = (uint32_t)((a << 16) | (b << 8) | c);
 
 		// split into 4 group of 6-bit
-		uint8_t group1 = (uint8_t)((combined >> 18) & 0x3F);
-		uint8_t group2 = (uint8_t)((combined >> 12) & 0x3F);
-		uint8_t group3 = (uint8_t)((combined >> 6) & 0x3F);
-		uint8_t group4 = (uint8_t)(combined & 0x3F);
+		uint_fast8_t group1 = (uint8_t)((combined >> 18) & 0x3F);
+		uint_fast8_t group2 = (uint8_t)((combined >> 12) & 0x3F);
+		uint_fast8_t group3 = (uint8_t)((combined >> 6) & 0x3F);
+		uint_fast8_t group4 = (uint8_t)(combined & 0x3F);
 		
 		// translate it into Base64
 		out[j++] = BASE64_TABLE[group1];
@@ -41,18 +41,17 @@ size_t beryton_base64_encode(char* out, const uint8_t* data, size_t len) {
 	}
 	
 	out[j] = '\0';
-	return j;
 }
 
 // base64_decode
-size_t beryton_base64_decode(uint8_t* out, const char* encoded) {
+void bt_base64_decode(uint8_t* out, const char* in) {
 	size_t i = 0, j = 0;
-	uint32_t buffer = 0;
+	uint_fast32_t buffer = 0;
 	int pad = 0;
 	int group = 0;
 
-	while (encoded[i]) {
-		char c = encoded[i++];
+	while (in[i]) {
+		char c = in[i++];
 
 		// translate it into bytes
 		if (c == '=') {
@@ -61,7 +60,7 @@ size_t beryton_base64_decode(uint8_t* out, const char* encoded) {
 			buffer <<= 6;
 		} else {
 			// take the value from lookup table
-			int val = find(c);
+			int val = b64to6bit(c);
 
 			if (val < 0) continue;
 
@@ -80,6 +79,91 @@ size_t beryton_base64_decode(uint8_t* out, const char* encoded) {
 			group = 0;
 		}
 	}
-
-	return j;
 }
+
+// base64_ctx
+typedef struct {
+	uint8_t buffer[4];
+	size_t buffer_len;
+} base64_ctx;
+
+// base64_init
+static void base64_init(void* ctx_ptr) {
+	base64_ctx* ctx = (base64_ptr*)ctx_ptr;
+
+	ctx->buffer_len = 0;
+}
+
+// base64_enc_update
+static void base64_enc_update(void* ctx_ptr, const uint8_t* in, size_t len, uint8_t* out) {
+	base64_ctx* ctx = (base64_ctx*)ctx_ptr;
+	size_t j = 0;
+
+	// insert new data to the buffer
+	for (size_t i = 0; i < len; i++) {
+		ctx->buffer[ctx->buffer_len++] = in[i];
+		
+		// if buffer length is more than 3
+		if (ctx->buffer_len > 3) {
+			// start encode the buffer
+			bt_base64_encode((char*)(out + j), ctx->buffer, 3);
+			// change and set some variable
+			j += 3;
+			ctx->buffer_len = 0;
+		}
+	}
+}
+
+// base64_dec_update
+static void base64_dec_update(void* ctx_ptr, const uint8_t* in, size_t len, uint8_t* out) {
+	base64_ctx* ctx = (base64_ctx*)ctx_ptr;
+	size_t j = 0;
+
+	// insert new data to the buffer
+	for (int i = 0; i < len; i++) {
+		ctx->buffer[ctx->buffer_len++] = (uint8_t)in[i];
+		
+		// if buffer length is more than 4
+		if (ctx->buffer_len > 4) {
+			// start decode the buffer
+			bt_base64_decode(out + j, (const char*)ctx->buffer);
+
+			// change and set some variable
+			j += 4;
+			ctx->buffer_len = 0;
+		}
+}
+
+// base64_enc_final
+static void base64_enc_final(void* ctx_ptr, uint8_t* out) {
+	base64_ctx* ctx = (base64_ctx*)ctx_ptr;
+
+	// encode the buffer
+	bt_base64_encode((char*)out, ctx->buffer, ctx->buffer_len);
+}
+
+// base64_dec_final
+static void base64_dec_final(void* ctx_ptr, uint8_t* out) {
+	base64_ctx* ctx = (base64_ctx*)ctx_ptr;
+	// fill the missing char with padding
+	while (ctx->buffer_len < 4) ctx->buffer[ctx->buffer_len++] = (uint8_t)'=';
+
+	// decode the buffer
+	bt_base64_decode(out, (const char*)ctx->buffer);
+}
+
+// bt_base64_enc
+const bt_algo bt_base64_enc = {
+	.init = base64_init;
+	.update = base64_enc_update;
+	.final = base64_enc_final;
+	.ctx_size = sizeof(base64_ctx);
+};
+
+// bt_base64_dec
+const bt_algo bt_base64_dec = {
+	.init = base64_init;
+	.update = base64_dec_update;
+	.final = base64_dec_final;
+	.ctx_size = sizeof(base64_ctx);
+};
