@@ -14,7 +14,7 @@ typedef struct bt_algo {
 	void (*update)(void*, uint8_t*, size_t, uint8_t*);
 	void (*final)(void*, uint8_t*);
 	size_t ctx_size;
-} bt_algo_ctx;
+} bt_algo;
 
 #ifdef __cplusplus
 }
