@@ -9,7 +9,7 @@ static inline PURE_ATT int b64to6bit(char c) {
 	if ((uint8_t)(c - '0') < 10) return c - '0' + 52; // '0' <= c <= '9'
 	if (c == '+') return 62;
 	if (c == '/') return 63;
-	return -1
+	return -1;
 }
 
 // base64_encode
@@ -89,7 +89,7 @@ typedef struct {
 
 // base64_init
 static void base64_init(void* ctx_ptr) {
-	base64_ctx* ctx = (base64_ptr*)ctx_ptr;
+	base64_ctx* ctx = (base64_ctx*)ctx_ptr;
 
 	ctx->buffer_len = 0;
 }
@@ -132,6 +132,7 @@ static void base64_dec_update(void* ctx_ptr, const uint8_t* in, size_t len, uint
 			j += 4;
 			ctx->buffer_len = 0;
 		}
+	}
 }
 
 // base64_enc_final
