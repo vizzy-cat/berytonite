@@ -1,7 +1,7 @@
 #include "sha256.h"
 #include "internal/attribute.h"
 #include "internal/compiler.h"
-#include <string.h>
+#include "internal/api.h"
 
 static const uint32_t k[64] = {
 	0x428a2f98, 0x71374491,
@@ -38,6 +38,7 @@ static const uint32_t k[64] = {
 	0xbef9a3f7, 0xc67178f2
 };
 
+// transformation functions
 static inline INLINE_ATT uint32_t ROTR(uint32_t x, uint32_t n) { return ((x >> n) | (x << (32 - n))); }
 static inline INLINE_ATT uint32_t SHR(uint32_t x, uint32_t n) { return (x >> n); }
 static inline INLINE_ATT uint32_t CH(uint32_t x, uint32_t y, uint32_t z) { return ((x & y) ^ (~x & z)); }
@@ -91,8 +92,18 @@ static void sha256_transform(beryton_sha256_ctx* restrict ctx, const uint8_t* re
 	ctx->h[7] += h;
 }
 
+// sha256_ctx
+typedef struct {
+	uint32_t h[8];
+	uint8_t buffer[64];
+	size_t buffer_len;
+	size_t total_len;
+} sha256_ctx;
+
 // sha256_init
-inline void beryton_sha256_init(beryton_sha256_ctx* ctx) {
+static void sha256_init(void* ctx_ptr) {
+	sha256_ctx* ctx = (sha256_ctx*)ctx_ptr;
+
 	ctx->h[0] = 0x6a09e667;
 	ctx->h[1] = 0xbb67ae85;
 	ctx->h[2] = 0x3c6ef372;
@@ -105,8 +116,12 @@ inline void beryton_sha256_init(beryton_sha256_ctx* ctx) {
 	ctx->total_len = 0;
 }
 
+static void sha256_final(void* ctx_ptr, uint8_t* out);
+
 // sha256_update
-void beryton_sha256_update(beryton_sha256_ctx* ctx, const uint8_t* data, size_t len) {
+static void sha256_update(void* ctx_ptr, const uint8_t* in, size_t len, uint8_t* out) {
+	sha256_ctx* ctx = (sha256_ctx*)ctx_ptr;
+
 	ctx->total_len += len;
 	size_t i = 0;
 	while (len > 0) {
@@ -124,10 +139,14 @@ void beryton_sha256_update(beryton_sha256_ctx* ctx, const uint8_t* data, size_t 
 			ctx->buffer_len = 0;
 		}
 	}
+
+	if (out) return;
 }
 
 // sha256_final
-void beryton_sha256_final(beryton_sha256_ctx* ctx, uint8_t* digest) {
+static void sha256_final(void* ctx_ptr, uint8_t* out) {
+	sha256_ctx* ctx = (sha256_ctx*)ctx_ptr;
+
 	uint64_t bit_len = ctx->total_len * 8;
 	ctx->buffer[ctx->buffer_len++] = 0x80;
 
@@ -153,10 +172,18 @@ void beryton_sha256_final(beryton_sha256_ctx* ctx, uint8_t* digest) {
 	}
 }
 
+// bt_sha256
+const bt_algo bt_sha256 = {
+	.init = sha256_init;
+	.update = sha256_update;
+	.final = sha256_final;
+	.ctx_size = sizeof(sha256_ctx);
+};
+
 // sha256_digest
-inline void beryton_sha256_digest(uint8_t* digest, const uint8_t* data, size_t len) {
-	beryton_sha256_ctx ctx;
-	beryton_sha256_init(&ctx);
-	beryton_sha256_update(&ctx, data, len);
-	beryton_sha256_final(&ctx, digest);
+void bt_sha256_digest(uint8_t* digest, const uint8_t* data, size_t len) {
+	sha256_ctx ctx;
+	sha256_init(&ctx);
+	sha256_update(&ctx, data, len);
+	sha256_final(&ctx, digest);
 }
