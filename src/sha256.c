@@ -48,8 +48,16 @@ static inline INLINE_ATT uint32_t SIG1(uint32_t x) { return (ROTR(x, 6) ^ ROTR(x
 static inline INLINE_ATT uint32_t S0(uint32_t x) { return (ROTR(x, 7) ^ ROTR(x, 18) ^ SHR(x, 3)); }
 static inline INLINE_ATT uint32_t S1(uint32_t x) { return (ROTR(x, 17) ^ ROTR(x, 19) ^ SHR(x, 10)); }
 
+// sha256_ctx
+typedef struct {
+	uint32_t h[8];
+	uint8_t buffer[64];
+	size_t buffer_len;
+	size_t total_len;
+} sha256_ctx;
+
 // sha256_transform
-static void sha256_transform(beryton_sha256_ctx* restrict ctx, const uint8_t* restrict data) {
+static void sha256_transform(sha256_ctx* restrict ctx, const uint8_t* restrict data) {
 	uint32_t w[64];
 	uint32_t a, b, c, d, e, f, g, h;
 
@@ -92,14 +100,6 @@ static void sha256_transform(beryton_sha256_ctx* restrict ctx, const uint8_t* re
 	ctx->h[7] += h;
 }
 
-// sha256_ctx
-typedef struct {
-	uint32_t h[8];
-	uint8_t buffer[64];
-	size_t buffer_len;
-	size_t total_len;
-} sha256_ctx;
-
 // sha256_init
 static void sha256_init(void* ctx_ptr) {
 	sha256_ctx* ctx = (sha256_ctx*)ctx_ptr;
@@ -129,7 +129,7 @@ static void sha256_update(void* ctx_ptr, const uint8_t* in, size_t len, uint8_t*
 		if (to_copy > len) to_copy = len;
 
 		for (size_t j = 0; j < to_copy; j++) 
-			ctx->buffer[ctx->buffer_len + j] = data[i + j];
+			ctx->buffer[ctx->buffer_len + j] = in[i + j];
 
 		ctx->buffer_len += to_copy;
 		i += to_copy;
@@ -165,10 +165,10 @@ static void sha256_final(void* ctx_ptr, uint8_t* out) {
 	sha256_transform(ctx, ctx->buffer);
 
 	for (int i = 0; i < 8; i++) {
-		digest[i*4] = (ctx->h[i] >> 24) & 0xFF;
-		digest[i*4+1] = (ctx->h[i] >> 16) & 0xFF;
-		digest[i*4+2] = (ctx->h[i] >> 8) & 0xFF;
-		digest[i*4+3] = ctx->h[i] & 0xFF;
+		out[i*4] = (ctx->h[i] >> 24) & 0xFF;
+		out[i*4+1] = (ctx->h[i] >> 16) & 0xFF;
+		out[i*4+2] = (ctx->h[i] >> 8) & 0xFF;
+		out[i*4+3] = ctx->h[i] & 0xFF;
 	}
 }
 
@@ -184,6 +184,6 @@ const bt_algo bt_sha256 = {
 void bt_sha256_digest(uint8_t* digest, const uint8_t* data, size_t len) {
 	sha256_ctx ctx;
 	sha256_init(&ctx);
-	sha256_update(&ctx, data, len);
+	sha256_update(&ctx, data, len, NULL);
 	sha256_final(&ctx, digest);
 }

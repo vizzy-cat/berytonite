@@ -121,7 +121,7 @@ static void base64_dec_update(void* ctx_ptr, const uint8_t* in, size_t len, uint
 	size_t j = 0;
 
 	// insert new data to the buffer
-	for (int i = 0; i < len; i++) {
+	for (size_t i = 0; i < len; i++) {
 		ctx->buffer[ctx->buffer_len++] = (uint8_t)in[i];
 		
 		// if buffer length is more than 4

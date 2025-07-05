@@ -27,7 +27,7 @@ size_t bt_secure_rand(void* buffer, size_t len) {
 
 	ssize_t total = 0;
 	while (total < (ssize_t)len) {
-		ssize_t r = read(fd, (char*)(buffer + total), len - total);
+		ssize_t r = read(fd, (char*)buffer + total, len - total);
 		if (r <= 0) {
 			close(fd);
 			return 0;

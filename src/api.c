@@ -21,7 +21,7 @@ void bt_free(bt_ctx* ctx) {
 	free(ctx->algo_ctx);
 }
 
-inline void bt_reuse(bt_ctx* ctx, bt_algo* algo) {
+inline void bt_reuse(bt_ctx* ctx) {
 	bt_free(ctx);
-	bt_init(ctx, algo);
+	bt_init(ctx, ctx->algo);
 }
