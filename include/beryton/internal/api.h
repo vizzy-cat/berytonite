@@ -18,4 +18,4 @@ typedef struct bt_algo {
 
 #ifdef __cplusplus
 }
-#endid
+#endif
