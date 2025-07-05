@@ -1,5 +1,6 @@
 #include "base64.h"
 #include "internal/attribute.h"
+#include "internal/api.h"
 
 static const char BASE64_TABLE[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
