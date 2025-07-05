@@ -154,16 +154,16 @@ static void base64_dec_final(void* ctx_ptr, uint8_t* out) {
 
 // bt_base64_enc
 const bt_algo bt_base64_enc = {
-	.init = base64_init;
-	.update = base64_enc_update;
-	.final = base64_enc_final;
-	.ctx_size = sizeof(base64_ctx);
+	.init = base64_init,
+	.update = base64_enc_update,
+	.final = base64_enc_final,
+	.ctx_size = sizeof(base64_ctx),
 };
 
 // bt_base64_dec
 const bt_algo bt_base64_dec = {
-	.init = base64_init;
-	.update = base64_dec_update;
-	.final = base64_dec_final;
-	.ctx_size = sizeof(base64_ctx);
+	.init = base64_init,
+	.update = base64_dec_update,
+	.final = base64_dec_final,
+	.ctx_size = sizeof(base64_ctx),
 };
