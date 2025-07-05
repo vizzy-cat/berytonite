@@ -174,10 +174,10 @@ static void sha256_final(void* ctx_ptr, uint8_t* out) {
 
 // bt_sha256
 const bt_algo bt_sha256 = {
-	.init = sha256_init;
-	.update = sha256_update;
-	.final = sha256_final;
-	.ctx_size = sizeof(sha256_ctx);
+	.init = sha256_init,
+	.update = sha256_update,
+	.final = sha256_final,
+	.ctx_size = sizeof(sha256_ctx),
 };
 
 // sha256_digest
