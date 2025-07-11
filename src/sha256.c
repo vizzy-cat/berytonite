@@ -3,6 +3,7 @@
 #include "internal/compiler.h"
 #include "internal/api.h"
 
+// SHA-256's constant round from FIPS PUB 180-4
 static const uint32_t k[64] = {
 	0x428a2f98, 0x71374491,
 	0xb5c0fbcf, 0xe9b5dba5,
@@ -38,35 +39,70 @@ static const uint32_t k[64] = {
 	0xbef9a3f7, 0xc67178f2
 };
 
-// transformation functions
-static inline INLINE_ATT uint32_t ROTR(uint32_t x, uint32_t n) { return ((x >> n) | (x << (32 - n))); }
-static inline INLINE_ATT uint32_t SHR(uint32_t x, uint32_t n) { return (x >> n); }
-static inline INLINE_ATT uint32_t CH(uint32_t x, uint32_t y, uint32_t z) { return ((x & y) ^ (~x & z)); }
-static inline INLINE_ATT uint32_t MAJ(uint32_t x, uint32_t y, uint32_t z) { return ((x & y) ^ (x & z) ^ (y & z)); }
-static inline INLINE_ATT uint32_t SIG0(uint32_t x) { return (ROTR(x, 2) ^ ROTR(x, 13) ^ ROTR(x, 22)); }
-static inline INLINE_ATT uint32_t SIG1(uint32_t x) { return (ROTR(x, 6) ^ ROTR(x, 11) ^ ROTR(x, 25)); }
-static inline INLINE_ATT uint32_t S0(uint32_t x) { return (ROTR(x, 7) ^ ROTR(x, 18) ^ SHR(x, 3)); }
-static inline INLINE_ATT uint32_t S1(uint32_t x) { return (ROTR(x, 17) ^ ROTR(x, 19) ^ SHR(x, 10)); }
+// Bitwise Transformation Functions
 
-// sha256_ctx
+// Rotate Right
+static inline INLINE_ATT uint32_t ROTR(uint32_t x, uint32_t n) {
+	return ((x >> n) | (x << (32 - n)));
+}
+
+// Shift Right
+static inline INLINE_ATT uint32_t SHR(uint32_t x, uint32_t n) {
+	return (x >> n);
+}
+
+// Choose
+static inline INLINE_ATT uint32_t CH(uint32_t x, uint32_t y, uint32_t z) {
+	return ((x & y) ^ (~x & z));
+}
+
+// Majority Voting Bitwise
+static inline INLINE_ATT uint32_t MAJ(uint32_t x, uint32_t y, uint32_t z) {
+	return ((x & y) ^ (x & z) ^ (y & z));
+}
+
+// Big Sigma 0
+static inline INLINE_ATT uint32_t SIG0(uint32_t x) {
+	return (ROTR(x, 2) ^ ROTR(x, 13) ^ ROTR(x, 22));
+}
+
+// Big Sigma 1
+static inline INLINE_ATT uint32_t SIG1(uint32_t x) {
+	return (ROTR(x, 6) ^ ROTR(x, 11) ^ ROTR(x, 25));
+}
+
+// Small Sigma 0
+static inline INLINE_ATT uint32_t S0(uint32_t x) {
+	return (ROTR(x, 7) ^ ROTR(x, 18) ^ SHR(x, 3));
+}
+
+// Small Sigma 1
+static inline INLINE_ATT uint32_t S1(uint32_t x) {
+	return (ROTR(x, 17) ^ ROTR(x, 19) ^ SHR(x, 10));
+}
+
+// Context struct for SHA-256
 typedef struct {
-	uint32_t h[8];
-	uint8_t buffer[64];
-	size_t buffer_len;
-	size_t total_len;
+	uint32_t h[8];		// State
+	uint8_t buffer[64];	// Buffer for 512-bit block
+	size_t buffer_len;	// Size of unprocessed data
+	size_t total_len;	// Sizenof total data
 } sha256_ctx;
 
-// sha256_transform
+// SHA-256's transformation function
 static void sha256_transform(sha256_ctx* restrict ctx, const uint8_t* restrict data) {
-	uint32_t w[64];
+	uint32_t w[64];		// Expanded message schedule
 	uint32_t a, b, c, d, e, f, g, h;
 
+	// Parse the first 16 word of input (big endian)
 	for (int i = 0; i < 16; ++i)
 		w[i] = (data[i * 4] << 24) | (data[i * 4 + 1] << 16) | (data[i * 4 + 2] << 8) | data[i * 4 + 3];
 
+	// Expand to 64 word
 	for (int i = 16; i < 64; i++)
 		w[i] = S1(w[i - 2]) + w[i - 7] + S0(w[i - 15]) + w[i - 16];
 
+	// Load state to local register
 	a = ctx->h[0];
 	b = ctx->h[1];
 	c = ctx->h[2];
@@ -76,7 +112,8 @@ static void sha256_transform(sha256_ctx* restrict ctx, const uint8_t* restrict d
 	g = ctx->h[6];
 	h = ctx->h[7];
 
-	UNROLL(4)
+	// 64 Round of SHA-256
+	UNROLL(4) // Unroll pragma for compiler
 	for (int i = 0; i < 64; i++) {
 		uint32_t t1 = h + SIG1(e) + CH(e, f, g) + k[i] + w[i];
 		uint32_t t2 = SIG0(a) + MAJ(a, b, c);
@@ -90,6 +127,7 @@ static void sha256_transform(sha256_ctx* restrict ctx, const uint8_t* restrict d
 		a = t1 + t2;
 	}
 
+	// Add to state
 	ctx->h[0] += a;
 	ctx->h[1] += b;
 	ctx->h[2] += c;
@@ -100,10 +138,11 @@ static void sha256_transform(sha256_ctx* restrict ctx, const uint8_t* restrict d
 	ctx->h[7] += h;
 }
 
-// sha256_init
+// Context initialization
 static void sha256_init(void* ctx_ptr) {
 	sha256_ctx* ctx = (sha256_ctx*)ctx_ptr;
 
+	// Set IV to state
 	ctx->h[0] = 0x6a09e667;
 	ctx->h[1] = 0xbb67ae85;
 	ctx->h[2] = 0x3c6ef372;
@@ -112,14 +151,13 @@ static void sha256_init(void* ctx_ptr) {
 	ctx->h[5] = 0x9b05688c;
 	ctx->h[6] = 0x1f83d9ab;
 	ctx->h[7] = 0x5be0cd19;
+
 	ctx->buffer_len = 0;
 	ctx->total_len = 0;
 }
 
-static void sha256_final(void* ctx_ptr, uint8_t* out);
-
-// sha256_update
-static void sha256_update(void* ctx_ptr, const uint8_t* in, size_t len, uint8_t* out) {
+// Process the data in stages
+static void sha256_update(void* ctx_ptr, const uint8_t* in, size_t len, uint8_t* out /* for API purpose, dont delete */) {
 	sha256_ctx* ctx = (sha256_ctx*)ctx_ptr;
 
 	ctx->total_len += len;
@@ -128,28 +166,36 @@ static void sha256_update(void* ctx_ptr, const uint8_t* in, size_t len, uint8_t*
 		size_t to_copy = 64 - ctx->buffer_len;
 		if (to_copy > len) to_copy = len;
 
+		// Copy data to buffer
 		for (size_t j = 0; j < to_copy; j++) 
 			ctx->buffer[ctx->buffer_len + j] = in[i + j];
 
 		ctx->buffer_len += to_copy;
 		i += to_copy;
 		len -= to_copy;
+
+		// If the buffer is full
 		if (ctx->buffer_len == 64) {
+			// Process immediately
 			sha256_transform(ctx, ctx->buffer);
 			ctx->buffer_len = 0;
 		}
 	}
 
-	if (out) return;
+	if (out) return; // for API purpose, dont delete
 }
 
-// sha256_final
+// Hash finalization
 static void sha256_final(void* ctx_ptr, uint8_t* out) {
 	sha256_ctx* ctx = (sha256_ctx*)ctx_ptr;
 
+	// Total length in bit
 	uint64_t bit_len = ctx->total_len * 8;
+
+	// Add '1' bit
 	ctx->buffer[ctx->buffer_len++] = 0x80;
 
+	// Add padding until 56 bytes
 	if (ctx->buffer_len > 56) {
 		while (ctx->buffer_len < 64)
 			ctx->buffer[ctx->buffer_len++] = 0;
@@ -157,13 +203,18 @@ static void sha256_final(void* ctx_ptr, uint8_t* out) {
 		ctx->buffer_len = 0;
 	}
 
+	// Add zero until 56 bytes offset
 	while (ctx->buffer_len < 56)
 		ctx->buffer[ctx->buffer_len++] = 0;
 
+	// Add length (big-endian)
 	for (int i = 7; i >= 0; i--)
 		ctx->buffer[ctx->buffer_len++] = (bit_len >> (i * 8)) & 0xFF;
+
+	// Process the last block
 	sha256_transform(ctx, ctx->buffer);
 
+	// Copy the hash to the output
 	for (int i = 0; i < 8; i++) {
 		out[i*4] = (ctx->h[i] >> 24) & 0xFF;
 		out[i*4+1] = (ctx->h[i] >> 16) & 0xFF;
@@ -172,15 +223,15 @@ static void sha256_final(void* ctx_ptr, uint8_t* out) {
 	}
 }
 
-// bt_sha256
+// SHA-256 Algorithm Descriptor
 const bt_algo bt_sha256 = {
 	.init = sha256_init,
 	.update = sha256_update,
 	.final = sha256_final,
-	.ctx_size = sizeof(sha256_ctx),
+	.ctx_size = sizeof(sha256_ctx)
 };
 
-// sha256_digest
+// Single digest function
 void bt_sha256_digest(uint8_t* digest, const uint8_t* data, size_t len) {
 	sha256_ctx ctx;
 	sha256_init(&ctx);
