@@ -7,7 +7,7 @@ Features :
 v0.2.0 - 2025-06-29
 New Features :
 1. Secure memzero
-2. Add support to GCC (and Windows)
+2. Add GCC and Windows support
 
 Changes :
-1. C23 → C17
+1. Standard downgrade: C23 → C17 (compatibility reason)
