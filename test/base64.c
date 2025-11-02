@@ -25,24 +25,24 @@ int main(void) {
 	uint8_t decoded[32];
 
 	// Case 1: Encoding test
-	beryton_base64_encode(encoded, (void*)input1, strlen(input1));
+	bt_base64_encode(encoded, (void*)input1, strlen(input1));
 
 	ASSERT_EQ_STR("TWFu", encoded);
 
 	// Case 2: Decoding test
-	beryton_base64_decode(decoded, encoded);
+	bt_base64_decode(decoded, encoded);
 
 	ASSERT_EQ_MEM("Man", decoded, 3);
 
 	// Case 3: Encoder padding test (1 byte)
 	const char* input2 = "M";
 
-	beryton_base64_encode(encoded, (void*)input2, strlen(input2));
+	bt_base64_encode(encoded, (void*)input2, strlen(input2));
 
 	ASSERT_EQ_STR("TQ==", encoded);
 
 	// Case 4: Decoder padding test (1 byte)
-	beryton_base64_decode(decoded, encoded);
+	bt_base64_decode(decoded, encoded);
 
 	ASSERT_EQ_MEM("M", decoded, 1);
 

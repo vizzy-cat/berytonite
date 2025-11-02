@@ -42,8 +42,8 @@ int main(void) {
         const char *input = tests[i].input;
         const char *expected = tests[i].expected_hex;
 
-        beryton_sha256_digest(hash, (const uint8_t *)input, strlen(input));
-        beryton_bytetohex(hex, hash, BERYTON_SHA256_DIGEST_SIZE);
+        bt_sha256_digest(hash, (const uint8_t *)input, strlen(input));
+        bt_bytetohex(hex, hash, BERYTON_SHA256_DIGEST_SIZE);
 
         if (strcmp(hex, expected) == 0) {
             printf("[PASS] Test %llu: input \"%s\"\n", (unsigned long long)i, input);
