@@ -1,5 +1,7 @@
 // berytonite internal forward declaration
 
+#pragma once
+
 #ifdef __cplusplus
 extern "C" {
 #endif
