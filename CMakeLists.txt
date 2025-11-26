@@ -33,8 +33,41 @@ else()
 	endif()
 endif()
 
-# Warnings
 add_compile_options(-Wall -Wextra -Wpedantic -Werror)
+
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+	add_compile_options(
+		-Wduplicated-cond
+		-Wduplicated-branches
+		-Wshadow
+		-Wsign-conversion
+		-Wlogical-op
+		-Wjump-misses-init
+		-Wdouble-promotion
+		-Wformat=2
+		-Wconversion
+		-fanalyzer
+		-Walloc-zero
+		-Walloca
+	)
+elseif(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+	add_compile_options(
+		-Wnull-dereference
+		-Wconversion
+		-Wfloat-equal
+		-Wdouble-promotion
+		-Wswitch-enum
+		-Wunreachable-code
+		-Wmissing-noreturn
+		-Wmissing-prototypes
+		-Wstring-conversion
+		-Wimplicit-fallthrough
+		-fanalyzer
+		-Wcomma
+		-Wextra-semi
+		-Wshadow-all
+	)
+endif()
 
 # Source files
 file(GLOB_RECURSE BERYTON_SRC CONFIGURE_DEPENDS src/*.c)
