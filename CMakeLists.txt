@@ -71,7 +71,7 @@ endif()
 
 # Source files
 file(GLOB_RECURSE BERYTON_SRC CONFIGURE_DEPENDS src/*.c)
-file(GLOB_RECURSE BERYTON_HEADERS CONFIGURE_DEPENDS include/beryton/*.h)
+file(GLOB_RECURSE BERYTON_HEADERS CONFIGURE_DEPENDS include/bt/*.h)
 
 # Shared Library
 add_library(beryton_shared SHARED ${BERYTON_SRC} ${BERYTON_HEADERS})
