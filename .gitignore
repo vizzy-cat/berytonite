@@ -12,6 +12,8 @@ _deps
 CMakeUserPresets.json
 build/*
 venv/*
+*.sublime-project
+*.sublime-workspace
 
 # CLion
 #  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
