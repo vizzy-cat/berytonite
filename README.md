@@ -17,7 +17,7 @@ While updates may not drop every day, the long-term vision is clear:
 
 ## License
 
-This project is licensed under the Berytonite License 2.0. See the [LICENSE](LICENSE) for details.
+This project is licensed under the No-Attribution Public License. See the [LICENSE](LICENSE) for details.
 
 ## Contributing
 
