@@ -9,17 +9,11 @@ With a minimalist API, modular architecture, and solid cross-platform support, B
 
 To build from source, see [BUILD.md](BUILD.md)
 
-## Development Status
-
-Berytonite is a passion project, handcrafted in spare hours with love and care.  
-While updates may not drop every day, the long-term vision is clear:  
-> To create a reliable, modern, and accessible cryptographic foundation for the C ecosystem.
-
 ## License
 
 This project is licensed under the No-Attribution Public License. See the [LICENSE](LICENSE) for details.
 
 ## Contributing
 
-Ideas, feedback, and pull requests are always welcome!Ideas, feedback, and pull requests are always welcome!
+Ideas, feedback, and pull requests are always welcome! Ideas, feedback, and pull requests are always welcome!
 Feel free to open issues or suggest improvements—this project thrives on community-driven growth
