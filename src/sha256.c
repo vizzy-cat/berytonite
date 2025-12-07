@@ -157,7 +157,7 @@ static void sha256_init(void* ctx_ptr) {
 }
 
 // Process the data in stages
-static void sha256_update(void* ctx_ptr, const uint8_t* in, size_t len, uint8_t* out /* for API purpose, dont delete */) {
+static void sha256_update(void* ctx_ptr, const uint8_t* in, size_t len, volatile uint8_t* out /* for API purpose, dont delete */) {
 	sha256_ctx* ctx = (sha256_ctx*)ctx_ptr;
 
 	ctx->total_len += len;
@@ -181,8 +181,6 @@ static void sha256_update(void* ctx_ptr, const uint8_t* in, size_t len, uint8_t*
 			ctx->buffer_len = 0;
 		}
 	}
-
-	if (out) return; // for API purpose, dont delete
 }
 
 // Hash finalization
