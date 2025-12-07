@@ -19,7 +19,12 @@ void bt_init(bt_ctx* ctx, bt_algo* algo);
 void bt_update(bt_ctx* ctx, const uint8_t* in, size_t len, uint8_t* out);
 void bt_final(bt_ctx* ctx, uint8_t* out);
 void bt_free(bt_ctx* ctx);
-inline void bt_reuse(bt_ctx* ctx);
+
+inline void bt_reuse(bt_ctx* ctx) {
+	// free and allocate new memory for the internal ctx
+	bt_free(ctx);
+	bt_init(ctx, ctx->algo);
+}
 
 #ifdef __cplusplus
 }
