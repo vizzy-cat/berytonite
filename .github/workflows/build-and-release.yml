@@ -39,7 +39,7 @@ jobs:
       run: |
         mkdir -p package/lib package/include
         cp build/libberyton* package/lib/ 2>/dev/null || true
-        cp -r include/beryton package/include/
+        cp -r include/bt package/include/
         cp README.md LICENSE BUILD.md CHANGELOG.md package/
 
         if [[ "$RUNNER_OS" == "Windows" ]];then
