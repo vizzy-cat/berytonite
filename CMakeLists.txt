@@ -17,6 +17,7 @@ if(MSVC)
 		message(STATUS "Build mode: DEBUG")
 	else()
 		message(STATUS "Build mode: Release")
+		set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
 
 		foreach(flag_var
 			CMAKE_C_FLAGS_RELEASE)
@@ -30,6 +31,7 @@ else()
 	else()
 		message(STATUS "Build mode: RELEASE")
 		add_compile_options(-O2)
+		set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
 	endif()
 endif()
 
