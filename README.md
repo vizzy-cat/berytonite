@@ -11,7 +11,7 @@ To build from source, see [BUILD.md](BUILD.md)
 
 ## License
 
-This project is licensed under the No-Attribution Public License. See the [LICENSE](LICENSE) for details.
+This project is licensed under the Apache License 2.0. See the [LICENSE](LICENSE) for details.
 
 ## Contributing
 
