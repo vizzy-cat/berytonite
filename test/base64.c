@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <string.h>
-#include "beryton/base64.h"
+#include "bt/base64.h"
 
 #define ASSERT_EQ_STR(expected, actual) \
 	{ \

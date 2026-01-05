@@ -2,8 +2,8 @@
 #include <string.h>
 #include <stdint.h>
 
-#include "beryton/sha256.h"
-#include "beryton/util.h"
+#include "bt/sha256.h"
+#include "bt/util.h"
 
 typedef struct {
     const char *input;
