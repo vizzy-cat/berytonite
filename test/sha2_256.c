@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdint.h>
 
-#include "bt/sha256.h"
+#include "bt/sha2_256.h"
 #include "bt/util.h"
 
 typedef struct {
@@ -34,16 +34,16 @@ static const test_vector_t tests[] = {
 };
 
 int main(void) {
-    uint8_t hash[BERYTON_SHA256_DIGEST_SIZE];
-    char hex[BERYTON_SHA256_DIGEST_SIZE * 2 + 1];
+    uint8_t hash[BT_SHA2_256_DIGEST_SIZE];
+    char hex[BT_SHA2_256_DIGEST_SIZE * 2 + 1];
     int fail = 0;
 
     for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); i++) {
         const char *input = tests[i].input;
         const char *expected = tests[i].expected_hex;
 
-        bt_sha256_digest(hash, (const uint8_t *)input, strlen(input));
-        bt_bytetohex(hex, hash, BERYTON_SHA256_DIGEST_SIZE);
+        bt_sha2_256_digest(hash, (const uint8_t *)input, strlen(input));
+        bt_bytetohex(hex, hash, BT_SHA2_256_DIGEST_SIZE);
 
         if (strcmp(hex, expected) == 0) {
             printf("[PASS] Test %llu: input \"%s\"\n", (unsigned long long)i, input);
