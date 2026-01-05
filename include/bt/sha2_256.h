@@ -6,7 +6,9 @@
 #include <stddef.h>
 #include "internal/forward.h"
 
+#ifndef BT_SHA2_256_DIGEST_SIZE
 #define BT_SHA2_256_DIGEST_SIZE 32
+#endif
 
 #ifdef __cplusplus
 extern "C" {
