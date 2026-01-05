@@ -90,7 +90,7 @@ typedef struct {
 } sha256_ctx;
 
 // SHA-256's transformation function
-static void sha256_transform(sha256_ctx* restrict ctx, const uint8_t* restrict data) {
+static inline void sha256_transform(sha256_ctx* restrict ctx, const uint8_t* restrict data) {
 	uint32_t w[64];		// Expanded message schedule
 	uint32_t a, b, c, d, e, f, g, h;
 
@@ -139,9 +139,7 @@ static void sha256_transform(sha256_ctx* restrict ctx, const uint8_t* restrict d
 }
 
 // Context initialization
-static void sha256_init(void* ctx_ptr) {
-	sha256_ctx* ctx = (sha256_ctx*)ctx_ptr;
-
+static void sha256_init(sha256_ctx* ctx) {
 	// Set IV to state
 	ctx->h[0] = 0x6a09e667;
 	ctx->h[1] = 0xbb67ae85;
@@ -157,9 +155,8 @@ static void sha256_init(void* ctx_ptr) {
 }
 
 // Process the data in stages
-static void sha256_update(void* ctx_ptr, const uint8_t* in, size_t len, uint8_t* out /* for API purpose, dont delete */) {
+static void sha256_update(sha256_ctx* restrict ctx, const uint8_t* restrict in, size_t len, uint8_t* out /* for API purpose, dont delete */) {
 	(void)out;
-	sha256_ctx* ctx = (sha256_ctx*)ctx_ptr;
 
 	ctx->total_len += len;
 	size_t i = 0;
@@ -185,9 +182,7 @@ static void sha256_update(void* ctx_ptr, const uint8_t* in, size_t len, uint8_t*
 }
 
 // Hash finalization
-static void sha256_final(void* ctx_ptr, uint8_t* out) {
-	sha256_ctx* ctx = (sha256_ctx*)ctx_ptr;
-
+static void sha256_final(sha256_ctx* restrict ctx, uint8_t* restrict out) {
 	// Total length in bit
 	uint64_t bit_len = ctx->total_len * 8;
 
@@ -224,9 +219,9 @@ static void sha256_final(void* ctx_ptr, uint8_t* out) {
 
 // SHA-256 Algorithm Descriptor
 const bt_algo bt_sha256 = {
-	.init = sha256_init,
-	.update = sha256_update,
-	.final = sha256_final,
+	.init = (void(*)(void*))sha256_init,
+	.update = (void(*)(void*, const uint8_t*, size_t, uint8_t*))sha256_update,
+	.final = (void(*)(void*, uint8_t*))sha256_final,
 	.ctx_size = sizeof(sha256_ctx)
 };
 
