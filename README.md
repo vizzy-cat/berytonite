@@ -1,7 +1,7 @@
 # Berytonite
 
 Berytonite is a modern cryptographic library for the C programming language—built to be lightweight, secure, and developer-friendly.  
-It offers a clean alternative to heavyweight libraries like OpenSSL, focusing on essential cryptographic primitives *without the bloat*.
+It offers a clean alternative, focusing on essential cryptographic primitives *without the bloat*.
 
 With a minimalist API, modular architecture, and solid cross-platform support, Berytonite empowers C developers to write secure software—without giving up control.
 
