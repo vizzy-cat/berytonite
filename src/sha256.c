@@ -157,7 +157,8 @@ static void sha256_init(void* ctx_ptr) {
 }
 
 // Process the data in stages
-static void sha256_update(void* ctx_ptr, const uint8_t* in, size_t len, volatile uint8_t* out /* for API purpose, dont delete */) {
+static void sha256_update(void* ctx_ptr, const uint8_t* in, size_t len, uint8_t* out /* for API purpose, dont delete */) {
+	(void)out;
 	sha256_ctx* ctx = (sha256_ctx*)ctx_ptr;
 
 	ctx->total_len += len;
@@ -214,10 +215,10 @@ static void sha256_final(void* ctx_ptr, uint8_t* out) {
 
 	// Copy the hash to the output
 	for (int i = 0; i < 8; i++) {
-		out[i*4] = (ctx->h[i] >> 24) & 0xFF;
-		out[i*4+1] = (ctx->h[i] >> 16) & 0xFF;
-		out[i*4+2] = (ctx->h[i] >> 8) & 0xFF;
-		out[i*4+3] = ctx->h[i] & 0xFF;
+		out[i*4] = (uint8_t)((ctx->h[i] >> 24) & 0xFF);
+		out[i*4+1] = (uint8_t)((ctx->h[i] >> 16) & 0xFF);
+		out[i*4+2] = (uint8_t)((ctx->h[i] >> 8) & 0xFF);
+		out[i*4+3] = (uint8_t)(ctx->h[i] & 0xFF);
 	}
 }
 

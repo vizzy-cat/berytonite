@@ -4,13 +4,13 @@
 
 static const char BASE64_TABLE[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-static inline PURE_ATT int b64to6bit(char c) {
-	if ((uint8_t)(c - 'A') < 26) return c - 'A'; // 'A' <= c <= 'Z'
-	if ((uint8_t)(c - 'a') < 26) return c - 'a' + 26; // 'a' <= c <= 'z'
-	if ((uint8_t)(c - '0') < 10) return c - '0' + 52; // '0' <= c <= '9'
+static inline PURE_ATT uint_fast32_t b64to6bit(char c) {
+	if ((uint8_t)(c - 'A') < 26) return (uint_fast32_t)(c - 'A'); // 'A' <= c <= 'Z'
+	if ((uint8_t)(c - 'a') < 26) return (uint_fast32_t)(c - 'a' + 26); // 'a' <= c <= 'z'
+	if ((uint8_t)(c - '0') < 10) return (uint_fast32_t)(c - '0' + 52); // '0' <= c <= '9'
 	if (c == '+') return 62;
 	if (c == '/') return 63;
-	return -1;
+	return 0;
 }
 
 // base64_encode
@@ -23,7 +23,7 @@ void bt_base64_encode(char* out, const uint8_t* in, size_t len) {
 		uint_fast8_t a = in[i++];
 		uint_fast8_t b = (i < len) ? in[i++] : 0;
 		uint_fast8_t c = (i < len) ? in[i++] : 0;
-		int_fast8_t remaining = len - start;
+		size_t remaining = len - start;
 
 		// combine into single 24-bit
 		uint_fast32_t combined = (uint32_t)((a << 16) | (b << 8) | c);
@@ -61,9 +61,9 @@ void bt_base64_decode(uint8_t* out, const char* in) {
 			buffer <<= 6;
 		} else {
 			// take the value from lookup table
-			int val = b64to6bit(c);
+			uint_fast32_t val = b64to6bit(c);
 
-			if (val < 0) continue;
+			if (val == 0) continue;
 
 			buffer = (buffer << 6) | val;
 		}

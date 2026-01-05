@@ -20,10 +20,10 @@
 // bytetohex
 void bt_bytetohex(char* out, const uint8_t* in, size_t len) {
 	// check each parameter
-	if (ptr == NULL) {
-		return 0;
+	if (out == NULL) {
+		return;
 	} else if (len == 0) {
-		return 0;
+		return;
 	}
 
 	// start to convert every bytes to a hexadecimal string
@@ -39,9 +39,9 @@ void bt_bytetohex(char* out, const uint8_t* in, size_t len) {
 void bt_memzero(void* ptr, size_t len) {
 	// check each parameter
 	if (ptr == NULL) {
-		return 0;
+		return;
 	} else if (len == 0) {
-		return 0;
+		return;
 	}
 
 	// we use different approach for different platform
@@ -58,7 +58,7 @@ void bt_memzero(void* ptr, size_t len) {
 // secure_random
 size_t bt_secure_rand(void* buffer, size_t len) {
 	// check each parameter
-	if (ptr == NULL) {
+	if (buffer == NULL) {
 		return 0;
 	} else if (len == 0) {
 		return 0;
@@ -72,7 +72,7 @@ size_t bt_secure_rand(void* buffer, size_t len) {
 	// why we need these things? ask some phone manufacturers WHO DONT UPDATE THEIR C LIBRARY
 
 	// load the whitenoise
-	int fd = open("/dev/urandom", O_RDONLY);
+	ssize_t fd = open("/dev/urandom", O_RDONLY);
 	if (fd < 0) {
 		// why this thing even need to failed?
 		return 0;
@@ -102,7 +102,7 @@ size_t bt_secure_rand(void* buffer, size_t len) {
 	close(fd);
 #else
 	// if the platform isnt Android, use the syscall
-	int out = getrandom(buffer, len, 0);
+	ssize_t out = getrandom(buffer, len, 0);
 
 	if (out != (ssize_t)len) {
 		return 0;
