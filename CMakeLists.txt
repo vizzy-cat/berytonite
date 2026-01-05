@@ -118,7 +118,7 @@ enable_testing()
 
 set(TEST_FILES
     test/base64.c
-    test/sha256.c
+    test/sha2_256.c
 )
 
 foreach(test_src ${TEST_FILES})
