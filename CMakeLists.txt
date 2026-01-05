@@ -77,7 +77,7 @@ file(GLOB_RECURSE BERYTON_HEADERS CONFIGURE_DEPENDS include/bt/*.h)
 add_library(beryton_shared SHARED ${BERYTON_SRC} ${BERYTON_HEADERS})
 set_target_properties(beryton_shared PROPERTIES OUTPUT_NAME beryton)
 target_include_directories(beryton_shared PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/beryton>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/bt>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
@@ -86,7 +86,7 @@ target_include_directories(beryton_shared PUBLIC
 add_library(beryton_static STATIC ${BERYTON_SRC} ${BERYTON_HEADERS})
 set_target_properties(beryton_static PROPERTIES OUTPUT_NAME beryton)
 target_include_directories(beryton_static PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/beryton>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/bt>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
@@ -108,7 +108,7 @@ install(TARGETS beryton_static beryton_shared
     LIBRARY DESTINATION lib
     RUNTIME DESTINATION bin
 )
-install(DIRECTORY include/beryton DESTINATION include)
+install(DIRECTORY include/bt DESTINATION include)
 
 # Testing
 include(CTest)
