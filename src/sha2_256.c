@@ -1,9 +1,9 @@
-#include "sha256.h"
+#include "sha2_256.h"
 #include "internal/attribute.h"
 #include "internal/compiler.h"
 #include "internal/api.h"
 
-// SHA-256's constant round from FIPS PUB 180-4
+// SHA2-256's constant round from FIPS PUB 180-4
 static const uint32_t k[64] = {
 	0x428a2f98, 0x71374491,
 	0xb5c0fbcf, 0xe9b5dba5,
@@ -89,7 +89,7 @@ typedef struct {
 	size_t total_len;	// Sizenof total data
 } sha256_ctx;
 
-// SHA-256's transformation function
+// SHA2-256's transformation function
 static inline void sha256_transform(sha256_ctx* restrict ctx, const uint8_t* restrict data) {
 	uint32_t w[64];		// Expanded message schedule
 	uint32_t a, b, c, d, e, f, g, h;
@@ -218,7 +218,7 @@ static void sha256_final(sha256_ctx* restrict ctx, uint8_t* restrict out) {
 }
 
 // SHA-256 Algorithm Descriptor
-const bt_algo bt_sha256 = {
+const bt_algo bt_sha2_256 = {
 	.init = (void(*)(void*))sha256_init,
 	.update = (void(*)(void*, const uint8_t*, size_t, uint8_t*))sha256_update,
 	.final = (void(*)(void*, uint8_t*))sha256_final,
@@ -226,7 +226,7 @@ const bt_algo bt_sha256 = {
 };
 
 // Single digest function
-void bt_sha256_digest(uint8_t* digest, const uint8_t* data, size_t len) {
+void bt_sha2_256_digest(uint8_t* digest, const uint8_t* data, size_t len) {
 	sha256_ctx ctx;
 	sha256_init(&ctx);
 	sha256_update(&ctx, data, len, NULL);
