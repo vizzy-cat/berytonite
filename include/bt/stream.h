@@ -2,13 +2,13 @@
 
 #pragma once
 
-#include <stdint.h>
-#include <stddef.h>
-#include "internal/forward.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#include <stdint.h>
+#include <stddef.h>
+#include "internal/forward.h"
 
 typedef struct {
 	void* algo_ctx;

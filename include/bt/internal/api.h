@@ -2,12 +2,12 @@
 
 #pragma once
 
-#include <stdint.h>
-#include <stddef.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#include <stdint.h>
+#include <stddef.h>
 
 typedef struct bt_algo {
 	void (*init)(void*);

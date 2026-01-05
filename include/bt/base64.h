@@ -2,13 +2,13 @@
 
 #pragma once
 
-#include <stdint.h>
-#include <stddef.h>
-#include "internal/forward.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#include <stdint.h>
+#include <stddef.h>
+#include "internal/forward.h"
 
 extern const bt_algo bt_base64_enc;
 extern const bt_algo bt_base64_dec;
