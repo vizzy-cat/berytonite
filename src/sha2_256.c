@@ -1,9 +1,9 @@
 #include "sha2_256.h"
 #include "internal/attribute.h"
-#include "internal/compiler.h"
 #include "internal/api.h"
 
 // SHA2-256's constant round from FIPS PUB 180-4
+ALIGNED(16)
 static const uint32_t k[64] = {
 	0x428a2f98, 0x71374491,
 	0xb5c0fbcf, 0xe9b5dba5,
@@ -42,43 +42,51 @@ static const uint32_t k[64] = {
 // Bitwise Transformation Functions
 
 // Rotate Right
-static inline INLINE_ATT uint32_t ROTR(uint32_t x, uint32_t n) {
-	return ((x >> n) | (x << (32 - n)));
+CONST_ATT
+static inline uint32_t ROTR(uint32_t x, uint32_t n) {
+	return (uint32_t)((x >> n) | (x << (32 - n)));
 }
 
 // Shift Right
-static inline INLINE_ATT uint32_t SHR(uint32_t x, uint32_t n) {
-	return (x >> n);
+CONST_ATT
+static inline uint32_t SHR(uint32_t x, uint32_t n) {
+	return (uint32_t)(x >> n);
 }
 
 // Choose
-static inline INLINE_ATT uint32_t CH(uint32_t x, uint32_t y, uint32_t z) {
-	return ((x & y) ^ (~x & z));
+CONST_ATT
+static inline uint32_t CH(uint32_t x, uint32_t y, uint32_t z) {
+	return (uint32_t)((x & y) ^ (~x & z));
 }
 
 // Majority Voting Bitwise
-static inline INLINE_ATT uint32_t MAJ(uint32_t x, uint32_t y, uint32_t z) {
-	return ((x & y) ^ (x & z) ^ (y & z));
+CONST_ATT
+static inline uint32_t MAJ(uint32_t x, uint32_t y, uint32_t z) {
+	return (uint32_t)((x & y) ^ (x & z) ^ (y & z));
 }
 
 // Big Sigma 0
-static inline INLINE_ATT uint32_t SIG0(uint32_t x) {
-	return (ROTR(x, 2) ^ ROTR(x, 13) ^ ROTR(x, 22));
+CONST_ATT
+static inline uint32_t SIG0(uint32_t x) {
+	return (uint32_t)(ROTR(x, 2) ^ ROTR(x, 13) ^ ROTR(x, 22));
 }
 
 // Big Sigma 1
-static inline INLINE_ATT uint32_t SIG1(uint32_t x) {
-	return (ROTR(x, 6) ^ ROTR(x, 11) ^ ROTR(x, 25));
+CONST_ATT
+static inline uint32_t SIG1(uint32_t x) {
+	return (uint32_t)(ROTR(x, 6) ^ ROTR(x, 11) ^ ROTR(x, 25));
 }
 
 // Small Sigma 0
-static inline INLINE_ATT uint32_t S0(uint32_t x) {
-	return (ROTR(x, 7) ^ ROTR(x, 18) ^ SHR(x, 3));
+CONST_ATT
+static inline uint32_t S0(uint32_t x) {
+	return (uint32_t)(ROTR(x, 7) ^ ROTR(x, 18) ^ SHR(x, 3));
 }
 
 // Small Sigma 1
-static inline INLINE_ATT uint32_t S1(uint32_t x) {
-	return (ROTR(x, 17) ^ ROTR(x, 19) ^ SHR(x, 10));
+CONST_ATT
+static inline uint32_t S1(uint32_t x) {
+	return (uint32_t)(ROTR(x, 17) ^ ROTR(x, 19) ^ SHR(x, 10));
 }
 
 // Context struct for SHA-256
@@ -218,6 +226,7 @@ static void sha256_final(sha256_ctx* restrict ctx, uint8_t* restrict out) {
 }
 
 // SHA-256 Algorithm Descriptor
+ALIGNED(16)
 const bt_algo bt_sha2_256 = {
 	.init = (void(*)(void*))sha256_init,
 	.update = (void(*)(void*, const uint8_t*, size_t, uint8_t*))sha256_update,
