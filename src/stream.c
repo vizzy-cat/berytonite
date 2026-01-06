@@ -3,7 +3,7 @@
 #include <stdlib.h>
 
 // init
-void bt_init(bt_ctx* ctx, bt_algo* algo) {
+void bt_init(bt_ctx* ctx, const bt_algo* algo) {
 	// check parameter
 	if (!ctx || !algo) {
 		return;
@@ -11,14 +11,14 @@ void bt_init(bt_ctx* ctx, bt_algo* algo) {
 
 	// allocate new memory for internal ctx and insert the algorithm into the ctx
 	ctx->algo_ctx = (void*)malloc(algo->ctx_size);
-	ctx->algo = algo;
+	ctx->algo = (bt_algo*)algo;
 	
 	// initial the internal ctx
 	ctx->algo->init(ctx->algo_ctx);
 }
 
 // update
-void bt_update(bt_ctx* ctx, const uint8_t* in, size_t len, uint8_t* out /* some algorithm might not give anything */) {
+void bt_update(bt_ctx* restrict ctx, const uint8_t* restrict in, size_t len, uint8_t* restrict out /* some algorithm might not give anything */) {
 	// check parameter
 	if (!ctx || !in || !len) {
 		return;

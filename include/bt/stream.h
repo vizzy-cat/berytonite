@@ -15,8 +15,8 @@ typedef struct {
 	bt_algo* algo;
 } bt_ctx;
 
-void bt_init(bt_ctx* ctx, bt_algo* algo);
-void bt_update(bt_ctx* ctx, const uint8_t* in, size_t len, uint8_t* out);
+void bt_init(bt_ctx* ctx, const bt_algo* algo);
+void bt_update(bt_ctx* restrict ctx, const uint8_t* restrict in, size_t len, uint8_t* restrict out);
 void bt_final(bt_ctx* ctx, uint8_t* out);
 void bt_free(bt_ctx* ctx);
 
