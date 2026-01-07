@@ -1,5 +1,6 @@
 #include "base64.h"
 #include "internal/attribute.h"
+#include <string.h>
 
 ALIGNED(16)
 static const char BASE64_TABLE[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
@@ -136,3 +137,9 @@ void base64_dec_final(base64_ctx* ctx, uint8_t* out) {
 	// decode the buffer
 	bt_base64_decode(out, (const char*)ctx->buffer);
 }
+
+void bt_base64_free(base64_ctx* ctx) {
+	memset(ctx->buffer, 0, sizeof(ctx->buffer));
+	buffer_len = 0;
+}
+
