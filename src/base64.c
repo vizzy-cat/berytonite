@@ -83,19 +83,8 @@ void bt_base64_decode(uint8_t* restrict out, const char* restrict in) {
 	}
 }
 
-// base64_ctx
-typedef struct {
-	uint8_t buffer[4];
-	size_t buffer_len;
-} base64_ctx;
-
-// base64_init
-void base64_init(base64_ctx* ctx) {
-	ctx->buffer_len = 0;
-}
-
 // base64_enc_update
-void base64_enc_update(base64_ctx* restrict ctx, const uint8_t* restrict in, size_t len, uint8_t* restrict out) {
+void base64_enc_update(base64_ctx* restrict ctx, const uint8_t* restrict in, uint8_t* restrict out, size_t len) {
 	size_t j = 0;
 
 	// insert new data to the buffer
@@ -114,7 +103,7 @@ void base64_enc_update(base64_ctx* restrict ctx, const uint8_t* restrict in, siz
 }
 
 // base64_dec_update
-void base64_dec_update(base64_ctx* restrict ctx, const uint8_t* restrict in, size_t len, uint8_t* restrict out) {
+void base64_dec_update(base64_ctx* restrict ctx, const uint8_t* restrict in, uint8_t* restrict out, size_t len) {
 	size_t j = 0;
 
 	// insert new data to the buffer
