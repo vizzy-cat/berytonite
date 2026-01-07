@@ -1,5 +1,6 @@
 #include "sha256.h"
 #include "internal/attribute.h"
+#include "internal/stream.h"
 
 // SHA2-256's constant round from FIPS PUB 180-4
 ALIGNED(16)
@@ -97,7 +98,7 @@ typedef struct {
 } sha256_ctx;
 
 // SHA2-256's transformation function
-static inline void sha256_transform(sha256_ctx* restrict ctx, const uint8_t* restrict data) {
+static void sha256_transform(sha256_ctx* restrict ctx, const uint8_t* restrict data) {
 	uint32_t w[64];		// Expanded message schedule
 	uint32_t a, b, c, d, e, f, g, h;
 
@@ -162,9 +163,7 @@ static void sha256_init(sha256_ctx* ctx) {
 }
 
 // Process the data in stages
-static void sha256_update(sha256_ctx* restrict ctx, const uint8_t* restrict in, size_t len, uint8_t* out /* for API purpose, dont delete */) {
-	(void)out;
-
+static void sha256_update(sha256_ctx* restrict ctx, const uint8_t* restrict in, size_t len) {
 	ctx->total_len += len;
 	size_t i = 0;
 	while (len > 0) {
@@ -228,7 +227,7 @@ static void sha256_final(sha256_ctx* restrict ctx, uint8_t* restrict out) {
 ALIGNED(16)
 const bt_hash bt_sha256 = {
 	.init = (void(*)(void*))sha256_init,
-	.update = (void(*)(void*, const uint8_t*, size_t, uint8_t*))sha256_update,
+	.update = (void(*)(void* restrict, const uint8_t* restrict, size_t))sha256_update,
 	.final = (void(*)(void*, uint8_t*))sha256_final,
 	.ctx_size = sizeof(sha256_ctx)
 };
@@ -237,6 +236,6 @@ const bt_hash bt_sha256 = {
 void bt_sha256_digest(uint8_t* digest, const uint8_t* data, size_t len) {
 	sha256_ctx ctx;
 	sha256_init(&ctx);
-	sha256_update(&ctx, data, len, NULL);
+	sha256_update(&ctx, data, len);
 	sha256_final(&ctx, digest);
 }
