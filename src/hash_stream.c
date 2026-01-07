@@ -2,7 +2,7 @@
 #include "internal/stream.h"
 #include <stdlib.h>
 
-void bt_hash_init(bt_hash_ctx* ctx, const bt_hash* hash_algo) {
+void bt_hash_init(bt_hash_ctx* ctx, bt_hash* hash_algo) {
 	if (!ctx || !hash_algo) return;
 
 	ctx->internal_ctx = malloc(hash_algo->ctx_size);
