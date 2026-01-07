@@ -1,4 +1,4 @@
-// berytonite internal api
+// berytonite internal
 
 #pragma once
 
@@ -9,12 +9,12 @@ extern "C" {
 #include <stdint.h>
 #include <stddef.h>
 
-typedef struct bt_algo {
+typedef struct bt_hash {
 	void (*init)(void*);
-	void (*update)(void*, const uint8_t*, size_t, uint8_t*);
+	void (*update)(void* restrict, const uint8_t* restrict, size_t);
 	void (*final)(void*, uint8_t*);
 	size_t ctx_size;
-} bt_algo;
+} bt_hash;
 
 #ifdef __cplusplus
 }
