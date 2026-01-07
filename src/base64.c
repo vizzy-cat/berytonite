@@ -1,5 +1,4 @@
 #include "base64.h"
-#include "internal/api.h"
 #include "internal/attribute.h"
 
 ALIGNED(16)
@@ -91,12 +90,12 @@ typedef struct {
 } base64_ctx;
 
 // base64_init
-static void base64_init(base64_ctx* ctx) {
+void base64_init(base64_ctx* ctx) {
 	ctx->buffer_len = 0;
 }
 
 // base64_enc_update
-static void base64_enc_update(base64_ctx* restrict ctx, const uint8_t* restrict in, size_t len, uint8_t* restrict out) {
+void base64_enc_update(base64_ctx* restrict ctx, const uint8_t* restrict in, size_t len, uint8_t* restrict out) {
 	size_t j = 0;
 
 	// insert new data to the buffer
@@ -115,7 +114,7 @@ static void base64_enc_update(base64_ctx* restrict ctx, const uint8_t* restrict 
 }
 
 // base64_dec_update
-static void base64_dec_update(base64_ctx* restrict ctx, const uint8_t* restrict in, size_t len, uint8_t* restrict out) {
+void base64_dec_update(base64_ctx* restrict ctx, const uint8_t* restrict in, size_t len, uint8_t* restrict out) {
 	size_t j = 0;
 
 	// insert new data to the buffer
@@ -135,34 +134,16 @@ static void base64_dec_update(base64_ctx* restrict ctx, const uint8_t* restrict 
 }
 
 // base64_enc_final
-static void base64_enc_final(base64_ctx* restrict ctx, uint8_t* restrict out) {
+void base64_enc_final(base64_ctx* ctx, uint8_t* out) {
 	// encode the buffer
 	bt_base64_encode((char*)out, ctx->buffer, ctx->buffer_len);
 }
 
 // base64_dec_final
-static void base64_dec_final(base64_ctx* restrict ctx, uint8_t* restrict out) {
+void base64_dec_final(base64_ctx* ctx, uint8_t* out) {
 	// fill the missing char with padding
 	while (ctx->buffer_len < 4) ctx->buffer[ctx->buffer_len++] = (uint8_t)'=';
 
 	// decode the buffer
 	bt_base64_decode(out, (const char*)ctx->buffer);
 }
-
-// bt_base64_enc
-ALIGNED(16)
-const bt_algo bt_base64_enc = {
-	.init = (void(*)(void*))base64_init,
-	.update = (void(*)(void*, const uint8_t*, size_t, uint8_t*))base64_enc_update,
-	.final = (void(*)(void*, uint8_t*))base64_enc_final,
-	.ctx_size = sizeof(base64_ctx)
-};
-
-// bt_base64_dec
-ALIGNED(16)
-const bt_algo bt_base64_dec = {
-	.init = (void(*)(void*))base64_init,
-	.update = (void(*)(void*, const uint8_t*, size_t, uint8_t*))base64_dec_update,
-	.final = (void(*)(void*, uint8_t*))base64_dec_final,
-	.ctx_size = sizeof(base64_ctx)
-};
