@@ -1,6 +1,5 @@
-#include "sha2_256.h"
+#include "sha256.h"
 #include "internal/attribute.h"
-#include "internal/api.h"
 
 // SHA2-256's constant round from FIPS PUB 180-4
 ALIGNED(16)
@@ -227,7 +226,7 @@ static void sha256_final(sha256_ctx* restrict ctx, uint8_t* restrict out) {
 
 // SHA-256 Algorithm Descriptor
 ALIGNED(16)
-const bt_algo bt_sha2_256 = {
+const bt_hash bt_sha256 = {
 	.init = (void(*)(void*))sha256_init,
 	.update = (void(*)(void*, const uint8_t*, size_t, uint8_t*))sha256_update,
 	.final = (void(*)(void*, uint8_t*))sha256_final,
@@ -235,7 +234,7 @@ const bt_algo bt_sha2_256 = {
 };
 
 // Single digest function
-void bt_sha2_256_digest(uint8_t* digest, const uint8_t* data, size_t len) {
+void bt_sha256_digest(uint8_t* digest, const uint8_t* data, size_t len) {
 	sha256_ctx ctx;
 	sha256_init(&ctx);
 	sha256_update(&ctx, data, len, NULL);
