@@ -1,11 +1,14 @@
 #include "hash_stream.h"
 #include "internal/stream.h"
+#include "util.h"
 #include <stdlib.h>
 
 void bt_hash_init(bt_hash_ctx* ctx, bt_hash* hash_algo) {
 	if (!ctx || !hash_algo) return;
 
-	ctx->internal_ctx = malloc(hash_algo->ctx_size);
+	ctx->internal_ctx = aligned_alloc(16, hash_algo->ctx_size);
+	if (!ctx->internal_ctx) return;
+
 	ctx->hash_algo = hash_algo;
 
 	hash_algo->init(ctx->internal_ctx);
@@ -26,5 +29,6 @@ void bt_hash_final(bt_hash_ctx* ctx, uint8_t* out) {
 void bt_hash_free(bt_hash_ctx* ctx) {
 	if (!ctx) return;
 
+	bt_memzero(ctx->internal_ctx, ctx->hash_algo->ctx_size);
 	free(ctx->internal_ctx);
 }
