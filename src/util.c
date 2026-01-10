@@ -36,6 +36,7 @@ void bt_bytetohex(char* out, const uint8_t* in, size_t len) {
 }
 
 // memzero
+NOINLINE_ATT
 void bt_memzero(void* ptr, size_t len) {
 	// check each parameter
 	if (ptr == NULL) {
@@ -48,6 +49,9 @@ void bt_memzero(void* ptr, size_t len) {
 #if defined(_WIN32)
 	// if the platform is Windows, use their own memzero
 	SecureZeroMemory(ptr, len);
+#elif defined(HAVE_EXPLICIT_BZERO)
+	// if the platform support explicit_bzero, use it
+	explicit_bzero(ptr, len);
 #else
 	// if something else, do manually instead
 	volatile unsigned char* p = (volatile unsigned char*)ptr;
