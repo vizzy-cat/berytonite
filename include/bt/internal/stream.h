@@ -2,6 +2,10 @@
 
 #pragma once
 
+#ifndef BT_INTERNAL_BUILD
+#error "This header is for Berytonite's internal use"
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif

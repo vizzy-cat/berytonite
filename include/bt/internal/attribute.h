@@ -2,6 +2,10 @@
 
 #pragma once
 
+#ifndef BT_INTERNAL_BUILD
+#error "This header is for Berytonite's internal use"
+#endif
+
 #if !defined(NOPTIMIZE)&&(defined(__GNUC__)||defined(__clang__))
 	#define DO_PRAGMA(X) _Pragma(#X)
 	#define PURE_ATT __attribute__((pure))
