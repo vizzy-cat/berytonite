@@ -1,8 +1,8 @@
 #include "base64.h"
 #include "internal/attribute.h"
+#include "util.h"
 #include <string.h>
 
-ALIGNED(16)
 static const char BASE64_TABLE[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 CONST_ATT
@@ -85,7 +85,7 @@ void bt_base64_decode(uint8_t* restrict out, const char* restrict in) {
 }
 
 // base64_enc_update
-void base64_enc_update(base64_ctx* restrict ctx, const uint8_t* restrict in, uint8_t* restrict out, size_t len) {
+void bt_base64_enc_update(bt_base64_ctx* restrict ctx, const uint8_t* restrict in, uint8_t* restrict out, size_t len) {
 	size_t j = 0;
 
 	// insert new data to the buffer
@@ -104,7 +104,7 @@ void base64_enc_update(base64_ctx* restrict ctx, const uint8_t* restrict in, uin
 }
 
 // base64_dec_update
-void base64_dec_update(base64_ctx* restrict ctx, const uint8_t* restrict in, uint8_t* restrict out, size_t len) {
+void bt_base64_dec_update(bt_base64_ctx* restrict ctx, const uint8_t* restrict in, uint8_t* restrict out, size_t len) {
 	size_t j = 0;
 
 	// insert new data to the buffer
@@ -124,13 +124,13 @@ void base64_dec_update(base64_ctx* restrict ctx, const uint8_t* restrict in, uin
 }
 
 // base64_enc_final
-void base64_enc_final(base64_ctx* ctx, uint8_t* out) {
+void bt_base64_enc_final(bt_base64_ctx* ctx, uint8_t* out) {
 	// encode the buffer
 	bt_base64_encode((char*)out, ctx->buffer, ctx->buffer_len);
 }
 
 // base64_dec_final
-void base64_dec_final(base64_ctx* ctx, uint8_t* out) {
+void bt_base64_dec_final(bt_base64_ctx* ctx, uint8_t* out) {
 	// fill the missing char with padding
 	while (ctx->buffer_len < 4) ctx->buffer[ctx->buffer_len++] = (uint8_t)'=';
 
@@ -138,8 +138,8 @@ void base64_dec_final(base64_ctx* ctx, uint8_t* out) {
 	bt_base64_decode(out, (const char*)ctx->buffer);
 }
 
-void bt_base64_free(base64_ctx* ctx) {
-	memset(ctx->buffer, 0, sizeof(ctx->buffer));
-	buffer_len = 0;
+void bt_base64_free(bt_base64_ctx* ctx) {
+	bt_memzero(ctx->buffer, sizeof(ctx->buffer));
+	ctx->buffer_len = 0;
 }
 
