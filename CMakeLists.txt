@@ -11,28 +11,18 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
 endif()
 
-# Compiler flags
-if(MSVC)
-	if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-		message(STATUS "Build mode: DEBUG")
-	else()
-		message(STATUS "Build mode: Release")
-		set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
+# Detect if the compiler or the target is support some features
+include(CheckSymbolExists)
+check_symbol_exists(explicit_bzero "string.h" HAVE_EXPLICIT_BZERO)
 
-		foreach(flag_var
-			CMAKE_C_FLAGS_RELEASE)
-			string(REPLACE "/RTC1" "" ${flag_var} "${${flag_var}}")
-		endforeach()
-	endif()
+# Compiler flags
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+		message(STATUS "Build mode: DEBUG")
+		add_compile_options(-Og -g -msse2 -DNOPTIMIZE -DENABLE_SSE)
 else()
-	if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    		message(STATUS "Build mode: DEBUG")
-    		add_compile_options(-O0 -g)
-	else()
-		message(STATUS "Build mode: RELEASE")
-		add_compile_options(-O2)
-		set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
-	endif()
+	message(STATUS "Build mode: RELEASE")
+	add_compile_options(-msse2 -DENABLE_SSE)
+	set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
 endif()
 
 add_compile_options(-Wall -Wextra -Wpedantic -Werror)
@@ -118,7 +108,7 @@ enable_testing()
 
 set(TEST_FILES
     test/base64.c
-    test/sha2_256.c
+    test/sha256.c
 )
 
 foreach(test_src ${TEST_FILES})
