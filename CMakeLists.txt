@@ -16,12 +16,15 @@ include(CheckSymbolExists)
 check_symbol_exists(explicit_bzero "string.h" HAVE_EXPLICIT_BZERO)
 
 # Compiler flags
+# Macro Flags
+add_compile_options(-DBT_INTERNAL_BUILD -DENABLE_SSE)
+
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 		message(STATUS "Build mode: DEBUG")
-		add_compile_options(-Og -g -msse2 -DNOPTIMIZE -DENABLE_SSE)
+		add_compile_options(-Og -g -msse2 -DNOPTIMIZE)
 else()
 	message(STATUS "Build mode: RELEASE")
-	add_compile_options(-msse2 -DENABLE_SSE)
+	add_compile_options(-msse2)
 	set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
 endif()
 
@@ -101,6 +104,9 @@ install(TARGETS beryton_static beryton_shared
     RUNTIME DESTINATION bin
 )
 install(DIRECTORY include/bt DESTINATION include)
+
+# Exclude internal headers
+install(DIRECTORY include/bt/ DESTINATION include FILES_MATCHING PATTERN "*.h" PATTERN "internal" EXCLUDE)
 
 # Testing
 include(CTest)
