@@ -1,9 +1,15 @@
 #include "sha256.h"
+#include "util.h"
 #include "internal/attribute.h"
 #include "internal/stream.h"
+#include <stdalign.h>
+#include <string.h>
+
+#if defined(ENABLE_SSE)
+#include <emmintrin.h> // SSE2
+#endif
 
 // SHA2-256's constant round from FIPS PUB 180-4
-ALIGNED(16)
 static const uint32_t k[64] = {
 	0x428a2f98, 0x71374491,
 	0xb5c0fbcf, 0xe9b5dba5,
@@ -41,17 +47,27 @@ static const uint32_t k[64] = {
 
 // Bitwise Transformation Functions
 
-// Rotate Right
+// Scalar Rotate Right
 CONST_ATT
-static inline uint32_t ROTR(uint32_t x, uint32_t n) {
+static inline uint32_t ROTR32(uint32_t x, uint32_t n) {
 	return (uint32_t)((x >> n) | (x << (32 - n)));
 }
 
-// Shift Right
+#if defined(ENABLE_SSE)
+// SIMD Rotate Right
 CONST_ATT
+static inline __m128i ROTR128(__m128i x, uint32_t n) {
+	__m128i a = _mm_srli_epi32(x, (int)n);
+	__m128i b = _mm_slli_epi32(x, (int)(32U-n));
+	return _mm_or_si128(a, b);
+}
+#endif
+
+// Shift Right
+/*CONST_ATT
 static inline uint32_t SHR(uint32_t x, uint32_t n) {
 	return (uint32_t)(x >> n);
-}
+}*/
 
 // Choose
 CONST_ATT
@@ -68,95 +84,194 @@ static inline uint32_t MAJ(uint32_t x, uint32_t y, uint32_t z) {
 // Big Sigma 0
 CONST_ATT
 static inline uint32_t SIG0(uint32_t x) {
-	return (uint32_t)(ROTR(x, 2) ^ ROTR(x, 13) ^ ROTR(x, 22));
+	return (uint32_t)(ROTR32(x, 2) ^ ROTR32(x, 13) ^ ROTR32(x, 22));
 }
 
 // Big Sigma 1
 CONST_ATT
 static inline uint32_t SIG1(uint32_t x) {
-	return (uint32_t)(ROTR(x, 6) ^ ROTR(x, 11) ^ ROTR(x, 25));
+	return (uint32_t)(ROTR32(x, 6) ^ ROTR32(x, 11) ^ ROTR32(x, 25));
 }
 
 // Small Sigma 0
 CONST_ATT
-static inline uint32_t S0(uint32_t x) {
-	return (uint32_t)(ROTR(x, 7) ^ ROTR(x, 18) ^ SHR(x, 3));
+static inline uint32_t S0_32(uint32_t x) {
+	return (uint32_t)(ROTR32(x, 7) ^ ROTR32(x, 18) ^ (x >> 3));
 }
 
 // Small Sigma 1
 CONST_ATT
-static inline uint32_t S1(uint32_t x) {
-	return (uint32_t)(ROTR(x, 17) ^ ROTR(x, 19) ^ SHR(x, 10));
+static inline uint32_t S1_32(uint32_t x) {
+	return (uint32_t)(ROTR32(x, 17) ^ ROTR32(x, 19) ^ (x >> 10));
+}
+
+#if defined(ENABLE_SSE)
+// SSE4
+// Small Sigma 0
+CONST_ATT
+static inline __m128i S0_128(__m128i x) {
+	// return (uint32_t)(ROTR(x, 7) ^ ROTR(x, 18) ^ SHR(x, 3));
+	__m128i a = ROTR128(x, 7);
+	__m128i b = ROTR128(x, 18);
+	__m128i c = _mm_srli_epi32(x, 3);
+	return _mm_xor_si128(_mm_xor_si128(a, b), c);
+}
+
+// Small Sigma 1
+CONST_ATT
+static inline __m128i S1_128(__m128i x) {
+	// return (uint32_t)(ROTR(x, 17) ^ ROTR(x, 19) ^ SHR(x, 10));
+	__m128i a = ROTR128(x, 17);
+	__m128i b = ROTR128(x, 19);
+	__m128i c = _mm_srli_epi32(x, 10);
+	return _mm_xor_si128(_mm_xor_si128(a, b), c);
 }
 
 // Context struct for SHA-256
+// SSE Aligned
 typedef struct {
-	uint32_t h[8];		// State
-	uint8_t buffer[64];	// Buffer for 512-bit block
+	alignas(16) uint8_t buffer[64];	// Buffer for 512-bit block
+	alignas(16) uint32_t state[8];	// State
 	size_t buffer_len;	// Size of unprocessed data
-	size_t total_len;	// Sizenof total data
+	size_t total_len;	// Size of total data
 } sha256_ctx;
+#else
+// Scalar
+// Context struct for SHA-256
+typedef struct {
+	uint8_t buffer[64];	// Buffer for 512-bit block
+	uint32_t state[8];	// State
+	size_t buffer_len;	// Size of unprocessed data
+	size_t total_len;	// Size of total data
+} sha256_ctx;
+#endif
 
 // SHA2-256's transformation function
+#if defined(ENABLE_SSE)
+// SSE4
 static void sha256_transform(sha256_ctx* restrict ctx, const uint8_t* restrict data) {
-	uint32_t w[64];		// Expanded message schedule
-	uint32_t a, b, c, d, e, f, g, h;
+	alignas(16) uint32_t w[64];		// Expanded message schedule
+	alignas(16) uint32_t state[8];
 
 	// Parse the first 16 word of input (big endian)
-	for (int i = 0; i < 16; ++i)
-		w[i] = (data[i * 4] << 24) | (data[i * 4 + 1] << 16) | (data[i * 4 + 2] << 8) | data[i * 4 + 3];
+	for (int i = 0; i < 16; i++) {
+		w[i] = ((uint32_t)data[i*4] << 24) |
+				((uint32_t)data[i*4+1] << 16) |
+				((uint32_t)data[i*4+2] << 8) |
+				data[i*4+3];
+	}
 
 	// Expand to 64 word
-	for (int i = 16; i < 64; i++)
-		w[i] = S1(w[i - 2]) + w[i - 7] + S0(w[i - 15]) + w[i - 16];
+	for (int i = 16; i < 64; i++) {
+		w[i] = S1_32(w[i - 2]) + w[i - 7] + S0_32(w[i - 15]) + w[i - 16];
+	}
 
 	// Load state to local register
-	a = ctx->h[0];
-	b = ctx->h[1];
-	c = ctx->h[2];
-	d = ctx->h[3];
-	e = ctx->h[4];
-	f = ctx->h[5];
-	g = ctx->h[6];
-	h = ctx->h[7];
+	{
+		__m128i tmp = _mm_load_si128((__m128i*)&ctx->state[0]);
+		_mm_storeu_si128((__m128i*)&state[0], tmp);
+		tmp = _mm_load_si128((__m128i*)&ctx->state[4]);
+		_mm_storeu_si128((__m128i*)&state[4], tmp);
+	}
 
 	// 64 Round of SHA-256
 	UNROLL(4) // Unroll pragma for compiler
 	for (int i = 0; i < 64; i++) {
-		uint32_t t1 = h + SIG1(e) + CH(e, f, g) + k[i] + w[i];
-		uint32_t t2 = SIG0(a) + MAJ(a, b, c);
-		h = g;
-		g = f;
-		f = e;
-		e = d + t1;
-		d = c;
-		c = b;
-		b = a;
-		a = t1 + t2;
+		uint32_t t1 = state[7] + SIG1(state[4]) + CH(state[4], state[5], state[6]) + k[i] + w[i];
+		uint32_t t2 = SIG0(state[0]) + MAJ(state[0], state[1], state[2]);
+		state[7] = state[6];
+		state[6] = state[5];
+		state[5] = state[4];
+		state[4] = state[3] + t1;
+		state[3] = state[2];
+		state[2] = state[1];
+		state[1] = state[0];
+		state[0] = t1 + t2;
 	}
 
 	// Add to state
-	ctx->h[0] += a;
-	ctx->h[1] += b;
-	ctx->h[2] += c;
-	ctx->h[3] += d;
-	ctx->h[4] += e;
-	ctx->h[5] += f;
-	ctx->h[6] += g;
-	ctx->h[7] += h;
+	{
+		__m128i a = _mm_loadu_si128((__m128i*)&ctx->state[0]);
+		__m128i b = _mm_loadu_si128((__m128i*)&state[0]);
+		_mm_storeu_si128((__m128i*)&ctx->state[0], _mm_add_epi32(a, b));
+		a = _mm_loadu_si128((__m128i*)&ctx->state[4]);
+		b = _mm_loadu_si128((__m128i*)&state[4]);
+		_mm_storeu_si128((__m128i*)&ctx->state[4], _mm_add_epi32(a, b));
+	}
+
+	// Cleanup
+	bt_memzero(&w[0], sizeof(w));
+	bt_memzero(&state[0], sizeof(state));
 }
+#else
+// Scalar
+static void sha256_transform(sha256_ctx* restrict ctx, const uint8_t* restrict data) {
+	uint32_t w[64];		// Expanded message schedule
+	uint32_t state[8];
+
+	// Parse the first 16 word of input (big endian)
+	UNROLL(4)
+	for (int i = 0; i < 16; i++) {
+		w[i] = ((uint32_t)data[i*4] << 24) |
+				((uint32_t)data[i*4+1] << 16) |
+				((uint32_t)data[i*4+2] << 8) |
+				data[i*4+3];
+	}
+
+	// Expand to 64 word
+	for (int i = 16; i < 64; i++) {
+		w[i] = S1_32(w[i - 2]) + w[i - 7] + S0_32(w[i - 15]) + w[i - 16];
+	}
+
+	// Load state to local register
+	memcpy(state, ctx->state, sizeof(ctx->state));
+
+	// 64 Round of SHA-256
+	UNROLL(4) // Unroll pragma for compiler
+	for (int i = 0; i < 64; i++) {
+		uint32_t t1 = state[7] + SIG1(state[4]) + CH(state[4], state[5], state[6]) + k[i] + w[i];
+		uint32_t t2 = SIG0(state[0]) + MAJ(state[0], state[1], state[2]);
+		state[7] = state[6];
+		state[6] = state[5];
+		state[5] = state[4];
+		state[4] = state[3] + t1;
+		state[3] = state[2];
+		state[2] = state[1];
+		state[1] = state[0];
+		state[0] = t1 + t2;
+	}
+
+	// Add to state
+	for (int i = 0; i < 8; i++) {
+		ctx->state[i] += state[i];
+	}
+
+	// Cleanup
+	bt_memzero(&w[0], sizeof(w));
+	bt_memzero(&state[0], sizeof(state));
+}
+#endif
 
 // Context initialization
 static void sha256_init(sha256_ctx* ctx) {
 	// Set IV to state
-	ctx->h[0] = 0x6a09e667;
-	ctx->h[1] = 0xbb67ae85;
-	ctx->h[2] = 0x3c6ef372;
-	ctx->h[3] = 0xa54ff53a;
-	ctx->h[4] = 0x510e527f;
-	ctx->h[5] = 0x9b05688c;
-	ctx->h[6] = 0x1f83d9ab;
-	ctx->h[7] = 0x5be0cd19;
+#if defined(ENABLE_SSE)
+	{
+		__m128i tmp = _mm_setr_epi32((int)0x6a09e667U, (int)0xbb67ae85U, (int)0x3c6ef372U, (int)0xa54ff53aU);
+		_mm_store_si128((__m128i*)&ctx->state[0], tmp);
+		tmp = _mm_setr_epi32((int)0x510e527fU, (int)0x9b05688cU, (int)0x1f83d9abU, (int)0x5be0cd19U);
+		_mm_store_si128((__m128i*)&ctx->state[4], tmp);
+	}
+#else
+	ctx->state[0] = 0x6a09e667U;
+	ctx->state[1] = 0xbb67ae85U;
+	ctx->state[2] = 0x3c6ef372U;
+	ctx->state[3] = 0xa54ff53aU;
+	ctx->state[4] = 0x510e527fU;
+	ctx->state[5] = 0x9b05688cU;
+	ctx->state[6] = 0x1f83d9abU;
+	ctx->state[7] = 0x5be0cd19U;
+#endif
 
 	ctx->buffer_len = 0;
 	ctx->total_len = 0;
@@ -187,6 +302,7 @@ static void sha256_update(sha256_ctx* restrict ctx, const uint8_t* restrict in, 
 	}
 }
 
+
 // Hash finalization
 static void sha256_final(sha256_ctx* restrict ctx, uint8_t* restrict out) {
 	// Total length in bit
@@ -216,15 +332,18 @@ static void sha256_final(sha256_ctx* restrict ctx, uint8_t* restrict out) {
 
 	// Copy the hash to the output
 	for (int i = 0; i < 8; i++) {
-		out[i*4] = (uint8_t)((ctx->h[i] >> 24) & 0xFF);
-		out[i*4+1] = (uint8_t)((ctx->h[i] >> 16) & 0xFF);
-		out[i*4+2] = (uint8_t)((ctx->h[i] >> 8) & 0xFF);
-		out[i*4+3] = (uint8_t)(ctx->h[i] & 0xFF);
+		out[i*4] = (uint8_t)((ctx->state[i] >> 24) & 0xFF);
+		out[i*4+1] = (uint8_t)((ctx->state[i] >> 16) & 0xFF);
+		out[i*4+2] = (uint8_t)((ctx->state[i] >> 8) & 0xFF);
+		out[i*4+3] = (uint8_t)(ctx->state[i] & 0xFF);
 	}
+
+	// Cleanup
+	bt_memzero(&ctx->buffer, sizeof(ctx->buffer));
+	bt_memzero(&ctx->state, sizeof(ctx->state));
 }
 
 // SHA-256 Algorithm Descriptor
-ALIGNED(16)
 const bt_hash bt_sha256 = {
 	.init = (void(*)(void*))sha256_init,
 	.update = (void(*)(void* restrict, const uint8_t* restrict, size_t))sha256_update,
