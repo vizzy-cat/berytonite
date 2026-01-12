@@ -12,10 +12,12 @@ extern "C" {
 typedef struct {
 	uint8_t buffer[4];
 	size_t buffer_len;
+	size_t total_len;
 } bt_base64_ctx;
 
-static inline void base64_init(bt_base64_ctx* ctx) {
+static inline void bt_base64_init(bt_base64_ctx* ctx) {
 	ctx->buffer_len = 0;
+	ctx->total_len = 0;
 }
 
 void bt_base64_enc_update(bt_base64_ctx* restrict ctx, const uint8_t* restrict in, uint8_t* restrict out, size_t len);
