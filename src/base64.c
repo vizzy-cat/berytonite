@@ -87,17 +87,18 @@ void bt_base64_decode(uint8_t* restrict out, const char* restrict in) {
 // base64_enc_update
 void bt_base64_enc_update(bt_base64_ctx* restrict ctx, const uint8_t* restrict in, uint8_t* restrict out, size_t len) {
 	size_t j = 0;
+	ctx->total_len += len;
 
 	// insert new data to the buffer
 	for (size_t i = 0; i < len; i++) {
 		ctx->buffer[ctx->buffer_len++] = in[i];
 		
 		// if buffer length is more than 3
-		if (ctx->buffer_len > 3) {
+		if (ctx->buffer_len == 3) {
 			// start encode the buffer
 			bt_base64_encode((char*)(out + j), ctx->buffer, 3);
 			// change and set some variable
-			j += 3;
+			j += 4;
 			ctx->buffer_len = 0;
 		}
 	}
@@ -106,13 +107,14 @@ void bt_base64_enc_update(bt_base64_ctx* restrict ctx, const uint8_t* restrict i
 // base64_dec_update
 void bt_base64_dec_update(bt_base64_ctx* restrict ctx, const uint8_t* restrict in, uint8_t* restrict out, size_t len) {
 	size_t j = 0;
+	ctx->total_len += len;
 
 	// insert new data to the buffer
 	for (size_t i = 0; i < len; i++) {
 		ctx->buffer[ctx->buffer_len++] = (uint8_t)in[i];
 		
 		// if buffer length is more than 4
-		if (ctx->buffer_len > 4) {
+		if (ctx->buffer_len == 3) {
 			// start decode the buffer
 			bt_base64_decode(out + j, (const char*)ctx->buffer);
 
@@ -126,7 +128,11 @@ void bt_base64_dec_update(bt_base64_ctx* restrict ctx, const uint8_t* restrict i
 // base64_enc_final
 void bt_base64_enc_final(bt_base64_ctx* ctx, uint8_t* out) {
 	// encode the buffer
-	bt_base64_encode((char*)out, ctx->buffer, ctx->buffer_len);
+	if (ctx->buffer_len > 0) {
+        bt_base64_encode((char*)out, ctx->buffer, ctx->buffer_len);
+    }
+	ctx->total_len = 0;
+	ctx->buffer_len = 0;
 }
 
 // base64_dec_final
@@ -136,10 +142,13 @@ void bt_base64_dec_final(bt_base64_ctx* ctx, uint8_t* out) {
 
 	// decode the buffer
 	bt_base64_decode(out, (const char*)ctx->buffer);
+	ctx->buffer_len = 0;
+    ctx->total_len = 0;
 }
 
 void bt_base64_free(bt_base64_ctx* ctx) {
 	bt_memzero(ctx->buffer, sizeof(ctx->buffer));
 	ctx->buffer_len = 0;
+	ctx->total_len = 0;
 }
 
