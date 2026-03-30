@@ -1,154 +1,112 @@
 #include "base64.h"
-#include "internal/attribute.h"
-#include "util.h"
-#include <string.h>
+#include <stdint.h>
+#include <stdalign.h>
+#include <stddef.h>
 
-static const char BASE64_TABLE[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+// SSSE3
+//#include <tmmintrin.h>
 
-CONST_ATT
-static inline uint_fast32_t b64to6bit(char c) {
-	if ((uint8_t)(c - 'A') < 26) return (uint_fast32_t)(c - 'A'); // 'A' <= c <= 'Z'
-	if ((uint8_t)(c - 'a') < 26) return (uint_fast32_t)(c - 'a' + 26); // 'a' <= c <= 'z'
-	if ((uint8_t)(c - '0') < 10) return (uint_fast32_t)(c - '0' + 52); // '0' <= c <= '9'
-	if (c == '+') return 62;
-	if (c == '/') return 63;
-	return 0;
-}
+//#define ENCODE_BITMASK _mm_setr_epi8( 0,1,2, 1,2,3, 2,3,4, 3,4,5, 4,5,6, 5 )
 
-// base64_encode
-void bt_base64_encode(char* restrict out, const uint8_t* restrict in, size_t len) {
-	size_t i = 0, j = 0;
+static const char ENCODE_LOOKUP[64] = {
+	'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N',
+	'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b',
+	'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p',
+	'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3',
+	'4', '5', '6', '7', '8','9', '+', '/'
+};
+
+static const int8_t DECODE_LOOKUP[256] = {
+	[0 ... 255] = -1,
+	['A'] = 0, ['B'] = 1, ['C'] = 2, ['D'] = 3, ['E'] = 4, ['F'] = 5, ['G'] = 6, ['H'] = 7, ['I'] = 8,
+	['J'] = 9, ['K'] = 10, ['L'] = 11, ['M'] = 12, ['N'] = 13, ['O'] = 14, ['P'] = 15, ['Q'] = 16,
+	['R'] = 17, ['S'] = 18, ['T'] = 19, ['U'] = 20, ['V'] = 21, ['W'] = 22, ['X'] = 23, ['Y'] = 24,
+	['Z'] = 25, ['a'] = 26, ['b'] = 27, ['c'] = 28, ['d'] = 29, ['e'] = 30, ['f'] = 31, ['g'] = 32,
+	['h'] = 33, ['i'] = 34, ['j'] = 35, ['k'] = 36, ['l'] = 37, ['m'] = 38, ['n'] = 39, ['o'] = 40,
+	['p'] = 41, ['q'] = 42, ['r'] = 43, ['s'] = 44, ['t'] = 45, ['u'] = 46, ['v'] = 47, ['w'] = 48,
+	['x'] = 49, ['y'] = 50, ['z'] = 51, ['0'] = 52, ['1'] = 53, ['2'] = 54, ['3'] = 55, ['4'] = 56,
+	['5'] = 57, ['6'] = 58, ['7'] = 59, ['8'] = 60, ['9'] = 61, ['+'] = 62, ['/'] = 63
+};
+
+static size_t encode_scalar(char* restrict out, const uint8_t* restrict in, size_t len) {
+	size_t i = 0;
+	size_t j = 0;
 
 	while (i < len) {
 		size_t start = i;
-		// take 3 bytes
+
+		// Take 3 bytes from input
 		uint_fast8_t a = in[i++];
-		uint_fast8_t b = (i < len) ? in[i++] : 0;
-		uint_fast8_t c = (i < len) ? in[i++] : 0;
-		size_t remaining = len - start;
+		uint_fast8_t b = __builtin_expect(i < len, 1) ? in[i++] : 0;
+		uint_fast8_t c = __builtin_expect(i < len, 1) ? in[i++] : 0;
 
-		// combine into single 24-bit
-		uint_fast32_t combined = (uint32_t)((a << 16) | (b << 8) | c);
+		// Save the number of remaining bytes
+		size_t remain = i - start;
 
-		// split into 4 group of 6-bit
-		uint_fast8_t group1 = (uint8_t)((combined >> 18) & 0x3F);
-		uint_fast8_t group2 = (uint8_t)((combined >> 12) & 0x3F);
-		uint_fast8_t group3 = (uint8_t)((combined >> 6) & 0x3F);
-		uint_fast8_t group4 = (uint8_t)(combined & 0x3F);
-		
-		// translate it into Base64
-		out[j++] = BASE64_TABLE[group1];
-		out[j++] = BASE64_TABLE[group2];
-		out[j++] = (remaining > 1) ? BASE64_TABLE[group3] : '=';
-		out[j++] = (remaining > 2) ? BASE64_TABLE[group4] : '=';
+		// Pack them into 24-bit
+		uint_fast32_t packed = ((uint_fast32_t)a << 16) | ((uint_fast32_t)b << 8) | (uint_fast32_t)c;
+
+		// Split the packed 24-bit into 4 6-bit integers and convert them into Base64 character
+		out[j++] = ENCODE_LOOKUP[(packed >> 18) & 0x3F];
+		out[j++] = ENCODE_LOOKUP[(packed >> 12) & 0x3F];
+		out[j++] = __builtin_expect(remain > 1, 1) ? ENCODE_LOOKUP[(packed >> 6) & 0x3F] : '='; // Use the number of remaining bytes to padding it
+		out[j++] = __builtin_expect(remain > 2, 1) ? ENCODE_LOOKUP[packed & 0x3F] : '=';
 	}
-	
-	out[j] = '\0';
+
+	return j;
 }
 
-// base64_decode
-void bt_base64_decode(uint8_t* restrict out, const char* restrict in) {
-	size_t i = 0, j = 0;
-	uint_fast32_t buffer = 0;
-	int pad = 0;
-	int group = 0;
+/*static inline size_t encode_sse(char* restrict out, const uint8_t* restrict in, size_t len) {
+	size_t i = 0;
 
-	while (in[i]) {
-		char c = in[i++];
+	while (i < len) {
+		__m128i input = _mm_loadu_si128((__m128i*)in);
 
-		// translate it into bytes
-		if (c == '=') {
-			// if it's a padding, skip
-			pad++;
-			buffer <<= 6;
-		} else {
-			// take the value from lookup table
-			uint_fast32_t val = b64to6bit(c);
+		__m128i block = _mm_shuffle_epi8(input, ENCODE_BITMASK);
 
-			if (val == 0) continue;
-
-			buffer = (buffer << 6) | val;
-		}
-		group++;
-		
-		// convert it into 3 bytes
-		if (group == 4) {
-			out[j++] = (buffer >> 16) & 0xFF;
-			if (pad < 2) out[j++] = (buffer >> 8) & 0xFF;
-			if (pad < 1) out[j++] = buffer & 0xFF;
-
-			buffer = 0;
-			pad = 0;
-			group = 0;
-		}
+		//
 	}
-}
+}*/
 
-// base64_enc_update
-void bt_base64_enc_update(bt_base64_ctx* restrict ctx, const uint8_t* restrict in, uint8_t* restrict out, size_t len) {
+static size_t decode_scalar(uint8_t* restrict out, const char* restrict in, size_t len) {
+	size_t i = 0;
 	size_t j = 0;
-	ctx->total_len += len;
 
-	// insert new data to the buffer
-	for (size_t i = 0; i < len; i++) {
-		ctx->buffer[ctx->buffer_len++] = in[i];
-		
-		// if buffer length is more than 3
-		if (ctx->buffer_len == 3) {
-			// start encode the buffer
-			bt_base64_encode((char*)(out + j), ctx->buffer, 3);
-			// change and set some variable
-			j += 4;
-			ctx->buffer_len = 0;
+	while (i < len) {
+		size_t start = i;
+
+		// Take 4 characters from input
+		int_fast8_t a = DECODE_LOOKUP[(int)in[i++]];
+		int_fast8_t b = DECODE_LOOKUP[(int)in[i++]];
+		int_fast8_t c = __builtin_expect(i < len && in[i] != '=', 1) ? DECODE_LOOKUP[(int)in[i++]] : 0;
+		int_fast8_t d = __builtin_expect(i < len && in[i] != '=', 1) ? DECODE_LOOKUP[(int)in[i++]] : 0;
+
+		// Save the number of padding
+		size_t remain = i - start;
+
+		// Are The taken 4 character just zeros?
+		if (__builtin_expect(a < 0 || b < 0 || c < 0 || d < 0, 0)) {
+			return 0;
 		}
+
+		// Pack them into 24-bit
+		uint_fast32_t packed = ((uint_fast32_t)a << 18) | ((uint_fast32_t)b << 12) | ((uint_fast32_t)c << 6) | (uint_fast32_t)d;
+
+		// Split them into 3 raw bytes
+		out[j++] = (packed >> 16) & 0xFF;
+		if (__builtin_expect(remain > 2, 1)) out[j++] = (packed >> 8) & 0xFF;
+		if (__builtin_expect(remain > 3, 1)) out[j++] = packed & 0xFF;
 	}
+
+	return j;
 }
 
-// base64_dec_update
-void bt_base64_dec_update(bt_base64_ctx* restrict ctx, const uint8_t* restrict in, uint8_t* restrict out, size_t len) {
-	size_t j = 0;
-	ctx->total_len += len;
+size_t bt_base64_encode(char* restrict out, const uint8_t* restrict in, size_t len) {
+	_Static_assert(sizeof(ENCODE_LOOKUP) / sizeof(ENCODE_LOOKUP[0]) == 64, "bad encode lookup");
 
-	// insert new data to the buffer
-	for (size_t i = 0; i < len; i++) {
-		ctx->buffer[ctx->buffer_len++] = (uint8_t)in[i];
-		
-		// if buffer length is more than 4
-		if (ctx->buffer_len == 3) {
-			// start decode the buffer
-			bt_base64_decode(out + j, (const char*)ctx->buffer);
-
-			// change and set some variable
-			j += 4;
-			ctx->buffer_len = 0;
-		}
-	}
+	return encode_scalar(out, in, len);
 }
 
-// base64_enc_final
-void bt_base64_enc_final(bt_base64_ctx* ctx, uint8_t* out) {
-	// encode the buffer
-	if (ctx->buffer_len > 0) {
-        bt_base64_encode((char*)out, ctx->buffer, ctx->buffer_len);
-    }
-	ctx->total_len = 0;
-	ctx->buffer_len = 0;
+size_t bt_base64_decode(uint8_t* restrict out, const char* restrict in, size_t len) {
+	return decode_scalar(out, in, len);
 }
-
-// base64_dec_final
-void bt_base64_dec_final(bt_base64_ctx* ctx, uint8_t* out) {
-	// fill the missing char with padding
-	while (ctx->buffer_len < 4) ctx->buffer[ctx->buffer_len++] = (uint8_t)'=';
-
-	// decode the buffer
-	bt_base64_decode(out, (const char*)ctx->buffer);
-	ctx->buffer_len = 0;
-    ctx->total_len = 0;
-}
-
-void bt_base64_free(bt_base64_ctx* ctx) {
-	bt_memzero(ctx->buffer, sizeof(ctx->buffer));
-	ctx->buffer_len = 0;
-	ctx->total_len = 0;
-}
-
