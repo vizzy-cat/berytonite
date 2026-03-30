@@ -1,10 +1,19 @@
 cmake_minimum_required(VERSION 3.16)
 project(berytonite LANGUAGES C)
 
-# C standard: C17 without extensions
-set(CMAKE_C_STANDARD 17)
+# C standard: C23 with extensions
+set(CMAKE_C_STANDARD 23)
 set(CMAKE_C_STANDARD_REQUIRED ON)
-set(CMAKE_C_EXTENSIONS OFF)
+set(CMAKE_C_EXTENSIONS ON)
+
+# Compiler lock
+if(NOT CMAKE_C_COMPILER_ID STREQUAL "GNU" AND NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    message(FATAL_ERROR
+		"Unsupported compiler: ${CMAKE_C_COMPILER_ID}. "
+		"Berytonite requires GCC or Clang. "
+		"Please set CC=gcc or CC=clang before running CMake."
+	)
+endif()
 
 # Default to Release
 if(NOT CMAKE_BUILD_TYPE)
@@ -17,18 +26,23 @@ check_symbol_exists(explicit_bzero "string.h" HAVE_EXPLICIT_BZERO)
 
 # Compiler flags
 # Macro Flags
-add_compile_options(-DBT_INTERNAL_BUILD -DENABLE_SSE)
+add_compile_options(-DBT_INTERNAL_BUILD)
+#add_compile_options(-DENABLE_SSE)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-		message(STATUS "Build mode: DEBUG")
-		add_compile_options(-Og -g -msse2 -DNOPTIMIZE)
+	message(STATUS "Build mode: DEBUG")
+	add_compile_options(-Og -g -DNOPTIMIZE)
+elseif(CMAKE_BUILD_TYPE STREQUAL "Sanitize")
+	message(STATUS "Build mode: SANITIZE")
+    add_compile_options(-O1 -g -fsanitize=address,undefined -fno-omit-frame-pointer)
+    add_link_options(-fsanitize=address,undefined)
 else()
 	message(STATUS "Build mode: RELEASE")
-	add_compile_options(-msse2)
+	add_compile_options(-O2)
 	set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
 endif()
 
-add_compile_options(-Wall -Wextra -Wpedantic -Werror)
+add_compile_options(-Wall -Wextra -Werror)
 
 if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
 	add_compile_options(
