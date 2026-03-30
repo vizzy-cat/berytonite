@@ -1,6 +1,5 @@
 #include "sha256.h"
 #include "util.h"
-#include "internal/attribute.h"
 #include "internal/stream.h"
 #include <stdalign.h>
 #include <string.h>
@@ -48,14 +47,14 @@ static const uint32_t k[64] = {
 // Bitwise Transformation Functions
 
 // Scalar Rotate Right
-CONST_ATT
+[[gnu::const]]
 static inline uint32_t ROTR32(uint32_t x, uint32_t n) {
 	return (uint32_t)((x >> n) | (x << (32 - n)));
 }
 
 #if defined(ENABLE_SSE)
 // SIMD Rotate Right
-CONST_ATT
+[[gnu::const]]
 static inline __m128i ROTR128(__m128i x, uint32_t n) {
 	__m128i a = _mm_srli_epi32(x, (int)n);
 	__m128i b = _mm_slli_epi32(x, (int)(32U-n));
@@ -64,43 +63,43 @@ static inline __m128i ROTR128(__m128i x, uint32_t n) {
 #endif
 
 // Shift Right
-/*CONST_ATT
+/*[[gnu::const]]
 static inline uint32_t SHR(uint32_t x, uint32_t n) {
 	return (uint32_t)(x >> n);
 }*/
 
 // Choose
-CONST_ATT
+[[gnu::const]]
 static inline uint32_t CH(uint32_t x, uint32_t y, uint32_t z) {
 	return (uint32_t)((x & y) ^ (~x & z));
 }
 
 // Majority Voting Bitwise
-CONST_ATT
+[[gnu::const]]
 static inline uint32_t MAJ(uint32_t x, uint32_t y, uint32_t z) {
 	return (uint32_t)((x & y) ^ (x & z) ^ (y & z));
 }
 
 // Big Sigma 0
-CONST_ATT
+[[gnu::const]]
 static inline uint32_t SIG0(uint32_t x) {
 	return (uint32_t)(ROTR32(x, 2) ^ ROTR32(x, 13) ^ ROTR32(x, 22));
 }
 
 // Big Sigma 1
-CONST_ATT
+[[gnu::const]]
 static inline uint32_t SIG1(uint32_t x) {
 	return (uint32_t)(ROTR32(x, 6) ^ ROTR32(x, 11) ^ ROTR32(x, 25));
 }
 
 // Small Sigma 0
-CONST_ATT
+[[gnu::const]]
 static inline uint32_t S0_32(uint32_t x) {
 	return (uint32_t)(ROTR32(x, 7) ^ ROTR32(x, 18) ^ (x >> 3));
 }
 
 // Small Sigma 1
-CONST_ATT
+[[gnu::const]]
 static inline uint32_t S1_32(uint32_t x) {
 	return (uint32_t)(ROTR32(x, 17) ^ ROTR32(x, 19) ^ (x >> 10));
 }
@@ -108,7 +107,7 @@ static inline uint32_t S1_32(uint32_t x) {
 #if defined(ENABLE_SSE)
 // SSE4
 // Small Sigma 0
-CONST_ATT
+[[gnu::const]]
 static inline __m128i S0_128(__m128i x) {
 	// return (uint32_t)(ROTR(x, 7) ^ ROTR(x, 18) ^ SHR(x, 3));
 	__m128i a = ROTR128(x, 7);
@@ -118,7 +117,7 @@ static inline __m128i S0_128(__m128i x) {
 }
 
 // Small Sigma 1
-CONST_ATT
+[[gnu::const]]
 static inline __m128i S1_128(__m128i x) {
 	// return (uint32_t)(ROTR(x, 17) ^ ROTR(x, 19) ^ SHR(x, 10));
 	__m128i a = ROTR128(x, 17);
@@ -175,7 +174,6 @@ static void sha256_transform(sha256_ctx* restrict ctx, const uint8_t* restrict d
 	}
 
 	// 64 Round of SHA-256
-	UNROLL(4) // Unroll pragma for compiler
 	for (int i = 0; i < 64; i++) {
 		uint32_t t1 = state[7] + SIG1(state[4]) + CH(state[4], state[5], state[6]) + k[i] + w[i];
 		uint32_t t2 = SIG0(state[0]) + MAJ(state[0], state[1], state[2]);
@@ -210,7 +208,6 @@ static void sha256_transform(sha256_ctx* restrict ctx, const uint8_t* restrict d
 	uint32_t state[8];
 
 	// Parse the first 16 word of input (big endian)
-	UNROLL(4)
 	for (int i = 0; i < 16; i++) {
 		w[i] = ((uint32_t)data[i*4] << 24) |
 				((uint32_t)data[i*4+1] << 16) |
@@ -227,7 +224,6 @@ static void sha256_transform(sha256_ctx* restrict ctx, const uint8_t* restrict d
 	memcpy(state, ctx->state, sizeof(ctx->state));
 
 	// 64 Round of SHA-256
-	UNROLL(4) // Unroll pragma for compiler
 	for (int i = 0; i < 64; i++) {
 		uint32_t t1 = state[7] + SIG1(state[4]) + CH(state[4], state[5], state[6]) + k[i] + w[i];
 		uint32_t t2 = SIG0(state[0]) + MAJ(state[0], state[1], state[2]);
