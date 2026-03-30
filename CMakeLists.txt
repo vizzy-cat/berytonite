@@ -46,6 +46,7 @@ add_compile_options(-Wall -Wextra -Werror)
 
 if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
 	add_compile_options(
+		-Wno-override-init
 		-Wduplicated-cond
 		-Wduplicated-branches
 		-Wshadow
@@ -61,6 +62,7 @@ if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
 	)
 elseif(CMAKE_C_COMPILER_ID STREQUAL "Clang")
 	add_compile_options(
+		-Wno-initializer-overrides
 		-Wnull-dereference
 		-Wconversion
 		-Wfloat-equal
