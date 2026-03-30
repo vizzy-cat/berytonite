@@ -1,5 +1,4 @@
 #include "util.h"
-#include "internal/attribute.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -36,8 +35,7 @@ void bt_bytetohex(char* out, const uint8_t* in, size_t len) {
 }
 
 // memzero
-NOINLINE_ATT
-void bt_memzero(void* ptr, size_t len) {
+[[gnu::noinline]] void bt_memzero(void* ptr, size_t len) {
 	// check each parameter
 	if (ptr == NULL) {
 		return;
