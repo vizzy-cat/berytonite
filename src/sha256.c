@@ -67,6 +67,21 @@ static void sha256_init(sha256_ctx* ctx) {
 	ctx->h[7] = 0x5be0cd19U;
 	ctx->buffer_len = 0;
 	ctx->total_len = 0;
+	memset(ctx->buffer, 0, sizeof(ctx->buffer));
+}
+
+static void sha224_init(sha256_ctx* ctx) {
+	ctx->h[0] = 0xc1059ed8U;
+	ctx->h[1] = 0x367cd507U;
+	ctx->h[2] = 0x3070dd17U;
+	ctx->h[3] = 0xf70e5939U;
+	ctx->h[4] = 0xffc00b31U;
+	ctx->h[5] = 0x68581511U;
+	ctx->h[6] = 0x64f98fa7U;
+	ctx->h[7] = 0xbefa4fa4U;
+	ctx->buffer_len = 0;
+	ctx->total_len = 0;
+	memset(ctx->buffer, 0, sizeof(ctx->buffer));
 }
 
 static void sha256_compression(sha256_ctx* restrict ctx, const uint8_t* restrict message) {
@@ -182,9 +197,31 @@ static void sha256_final(sha256_ctx* restrict ctx, uint8_t* restrict digest) {
 	bt_memzero(ctx, sizeof(sha256_ctx));
 }
 
+static void sha224_final(sha256_ctx* restrict ctx, uint8_t* restrict digest) {
+	sha256_padding(ctx);
+
+	// Copy the hash to the output
+	for (uint32_t i = 0; i < 7; i++) {
+		digest[i*4] = (uint8_t)((ctx->h[i] >> 24) & 0xFF);
+		digest[i*4+1] = (uint8_t)((ctx->h[i] >> 16) & 0xFF);
+		digest[i*4+2] = (uint8_t)((ctx->h[i] >> 8) & 0xFF);
+		digest[i*4+3] = (uint8_t)(ctx->h[i] & 0xFF);
+	}
+
+	// Cleanup
+	bt_memzero(ctx, sizeof(sha256_ctx));
+}
+
 void bt_sha256_digest(uint8_t* digest, const uint8_t* message, size_t len) {
 	sha256_ctx ctx;
 	sha256_init(&ctx);
 	sha256_update(&ctx, message, len);
 	sha256_final(&ctx, digest);
+}
+
+void bt_sha224_digest(uint8_t* digest, const uint8_t* message, size_t len) {
+	sha256_ctx ctx;
+	sha224_init(&ctx);
+	sha256_update(&ctx, message, len);
+	sha224_final(&ctx, digest);
 }
