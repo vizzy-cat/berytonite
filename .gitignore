@@ -10,9 +10,9 @@ compile_commands.json
 CTestTestfile.cmake
 _deps
 CMakeUserPresets.json
-build/*
-bin/*
-venv/*
+build/
+bin/
+venv/
 *.sublime-project
 *.sublime-workspace
 
